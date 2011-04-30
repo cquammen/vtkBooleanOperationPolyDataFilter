@@ -105,11 +105,32 @@ Oriented bounding box (OBB) trees are used to accelerate the identification of t
 
 End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkMergePoints} object, leading to many fewer connected components than if the line segments were stored as ``line soup''. In addition, each end point is tested to see if it lies on each edge of the two input triangles. If so, the index of the triangle, the index of the edge, and the index of the intersecting line is associated with the index of the endpoint in a \code{std::multimap}.
 
-The end point-edge intersection information is used to split the fully connected intersection lines to respect the topology of the input mesh. Because the end points of the intersection lines are merged during construction, they need to be split where the mesh is split. The end result should be that a copy of each line end point is produced for each set of triangles that share an edge. This can be achieved by iterating over the elements in the end point-edge intersection \code{std::multimap}, creating a copy of the point, and removing all records in the multimap where the cell ID is the same as one identified as being a neighbor of the current cell being processed connected at the edge in question.
+The end point-edge intersection information is used to split the fully connected intersection lines to respect the topology of each input mesh. Because the end points of the intersection lines are merged during construction, they need to be split where the mesh is split. The end result should be that a copy of each line end point is produced for each set of triangles that share an edge. This can be achieved by iterating over the elements in the end point-edge intersection \code{std::multimap}, creating a copy of the point, and removing all records in the multimap where the cell ID is the same as one identified as being a neighbor of the current cell being processed connected at the edge in question.
 
 \subsection{Splitting the Mesh}
 
+After the intersection lines are split for a mesh, the next step is to identify candidate cells for splitting. A cell is a candidate cell in two cases:
 
+\begin{enumerate}
+\item The cell index is in the intersection line map, meaning that intersection lines lie inside the cell.
+\item The cell is the neighbor of a cell identified by case 1.
+\end{enumerate}
+
+The second case is important because one of the mesh-mesh intersection lines may have an endpoint on the edge of one cell, but no line that uses that endpoint on the cell neighbor across that edge. The cell neighbor needs to be split to avoid introducing a T-junction and therefore a hole in the output mesh.
+
+Splitting proceeds on a cell-by-cell basis. For each cell that needs splitting, the following data is gathered:
+
+\begin{enumerate}
+\item The three points that define the cell.
+\item The boundary lines of the cell.
+\item The split intersection lines that lie in the cell.
+\item The points that define the lines in 3.
+\item Points from neighboring cells that lie on a cell edge but which were not already added in 4.
+\end{enumerate}
+
+The lines collected above are used to constrain the new triangulation of the points. That is to say, these lines should be present in the output mesh. Special processing of the boundary lines is required to achieve the desired split. Specifically, boundary lines must be split at points that lie on them.
+
+The \code{vtkDelaunay2D} class can be used to achieve a constrained triangulation. A transformation of the points collected above that rotates them to the XY-plane is calculated is computed and set as the transform for the \code{vtkDelaunay2D} object. A new \code{vtkPolyData} object that contains the collected points and lines is defined and passed as both the input and constraint source to a \code{vtkDelaunay2D} object. The line point indices are renumbered to point to their locations in the new \code{vtkPolyData} object, and a map back to their original indices is created to remap the output cell indices from the triangulation to the point indices in the output mesh.
 
 \section{Mesh-to-Mesh Signed Distance Calculation}
 
