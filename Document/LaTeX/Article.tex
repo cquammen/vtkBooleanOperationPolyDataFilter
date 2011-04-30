@@ -99,9 +99,17 @@ The most complex part of the computing boolean operations on a surface mesh is s
 
 \subsection{Identifying Surface-Surface Intersection}
 
-Identifying the intersection of a mesh with another mesh involves identifying the intersection between each triangle in the first mesh with the triangles that intersect it in the second mesh. A triangle-triangle intersection test yields two end points of the line segment defining the intersection for non-coplanar triangles; this contribution does not explicitly handle intersections between two coplanar triangles. The points from these intersections are merged using a \code{vtkMergePoints} object, leading to many fewer connected components than if the line segments were stored as ``line soup''.
+Identifying the intersection of a mesh with another mesh involves identifying the intersection between each triangle in the first mesh with the triangles that intersect it in the second mesh. A triangle-triangle intersection test yields two end points of the line segment defining the intersection for non-coplanar triangles; this contribution does not explicitly handle intersections between two coplanar triangles. 
+
+Oriented bounding box (OBB) trees are used to accelerate the identification of triangle-triangle intersections between meshes. Two \code{vtkOBBTree} objects are instantiated, one for each input mesh. The method \code{vtkOBBTree::IntersectWithOBBTree()} is then called on one OBB tree with the second OBB tree and a callback function passed as parameters. The callback function performs exact triangle-triangle intersection tests between the triangles in overlapping nodes from the two OBB trees and stores the results in several data structures used later in the algorithm.
+
+End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkMergePoints} object, leading to many fewer connected components than if the line segments were stored as ``line soup''. In addition, each end point is tested to see if it lies on each edge of the two input triangles. If so, the index of the triangle, the index of the edge, and the index of the intersecting line is associated with the index of the endpoint in a \code{std::multimap}.
+
+The end point-edge intersection information is used to split the fully connected intersection lines to respect the topology of the input mesh. Because the end points of the intersection lines are merged during construction, they need to be split where the mesh is split. The end result should be that a copy of each line end point is produced for each set of triangles that share an edge. This can be achieved by iterating over the elements in the end point-edge intersection \code{std::multimap}, creating a copy of the point, and removing all records in the multimap where the cell ID is the same as one identified as being a neighbor of the current cell being processed connected at the edge in question.
 
 \subsection{Splitting the Mesh}
+
+
 
 \section{Mesh-to-Mesh Signed Distance Calculation}
 
