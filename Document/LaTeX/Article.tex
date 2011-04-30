@@ -1,0 +1,194 @@
+%
+% Complete documentation on the extended LaTeX markup used for Insight
+% documentation is available in ``Documenting Insight'', which is part
+% of the standard documentation for Insight.  It may be found online
+% at:
+%
+%     http://www.itk.org/
+
+\documentclass{InsightArticle}
+
+\usepackage[dvips]{graphicx}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  hyperref should be the last package to be loaded.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[dvips,
+bookmarks,
+bookmarksopen,
+backref,
+colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
+]{hyperref}
+
+
+%  This is a template for Papers to the Insight Journal. 
+%  It is comparable to a technical report format.
+
+% The title should be descriptive enough for people to be able to find
+% the relevant document. 
+\title{Boolean Operations for Surfaces in VTK Without External Libraries}
+
+% 
+% NOTE: This is the last number of the "handle" URL that 
+% The Insight Journal assigns to your paper as part of the
+% submission process. Please replace the number "1338" with
+% the actual handle number that you get assigned.
+%
+\newcommand{\IJhandlerIDnumber}{1338}
+
+% Increment the release number whenever significant changes are made.
+% The author and/or editor can define 'significant' however they like.
+\release{1.00}
+
+% At minimum, give your name and an email address.  You can include a
+% snail-mail address if you like.
+\author{Cory Quammen and Russell M. Taylor II}
+\authoraddress{Department of Computer Science\\
+             The University of North Carolina at Chapel Hill
+}
+
+\begin{document}
+
+%
+% Add hyperlink to the web location and license of the paper.
+% The argument of this command is the handler identifier given
+% by the Insight Journal to this paper.
+% 
+\IJhandlefooter{\IJhandlerIDnumber}
+
+
+\ifpdf
+\else
+   %
+   % Commands for including Graphics when using latex
+   % 
+   \DeclareGraphicsExtensions{.eps,.jpg,.gif,.tiff,.bmp,.png}
+   \DeclareGraphicsRule{.jpg}{eps}{.jpg.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.gif}{eps}{.gif.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.tiff}{eps}{.tiff.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.bmp}{eps}{.bmp.bb}{`convert #1 eps:-}
+   \DeclareGraphicsRule{.png}{eps}{.png.bb}{`convert #1 eps:-}
+\fi
+
+
+\maketitle
+
+
+\ifhtml
+\chapter*{Front Matter\label{front}}
+\fi
+
+
+% The abstract should be a paragraph or two long, and describe the
+% scope of the document.
+\begin{abstract}
+\noindent
+A previous VTK Journal article provided a VTK class that enabled boolean operations on surfaces defined by \code{vtkPolyData} objects. While the capabilities introduced by the previous contribution satisfied numerous request on the vtk-developers and vtk-users email lists, the class could not be incorporated into VTK because of a licensing incompatibility with the GTS library used to perform the boolean operations. This article describes a set of classes than enable the same boolean operations as the previous contribution using only VTK classes. Our contribution also has some feature enhancements over the previous contribution, namely,  support for meshes with more than one connected component and interpolation of point data at points introduced by the splitting procedure.
+
+\end{abstract}
+
+\IJhandlenote{\IJhandlerIDnumber}
+
+\tableofcontents
+
+\section{Clipping One Surface with Another Surface}
+
+The most complex part of the computing boolean operations on a surface mesh is splitting one input surface mesh by the other. 
+
+\subsection{Identifying Surface-Surface Intersection}
+
+Identifying the intersection of a mesh with another mesh involves identifying the intersection between each triangle in the first mesh with the triangles that intersect it in the second mesh. A triangle-triangle intersection test yields two end points of the line segment defining the intersection for non-coplanar triangles; this contribution does not explicitly handle intersections between two coplanar triangles. The points from these intersections are merged using a \code{vtkMergePoints} object, leading to many fewer connected components than if the line segments were stored as ``line soup''.
+
+\subsection{Splitting the Mesh}
+
+\section{Mesh-to-Mesh Signed Distance Calculation}
+
+\section{Boolean Operations}
+
+\subsection{Union}
+
+\subsection{Intersection}
+
+\subsection{Difference}
+
+\section{Limitations}
+
+These classes do not properly handle intersections between coplanar triangles. When such an intersection event has been detected, the intersection information is discarded. Such intersections likely occur when portions of the meshes are immediately adjacent to each other, however, and their exclusion from the surface-to-surface intersection information will usually not affect the mesh splitting results.
+
+\section{Software Requirements}
+
+You need to have the following software installed:
+
+% The {itemize} environment uses a bullet for each \item.  If you want the 
+% \item's numbered, use the {enumerate} environment instead.
+\begin{itemize}
+  \item  Insight Toolkit 2.4.
+  \item  CMake 2.2
+\end{itemize}
+
+Note that other versions of the Insight Toolkit are also available in the
+testing framework of the Insight Journal. Please refere to the following page
+for details
+
+\url{http://www.insightsoftwareconsortium.org/wiki/index.php/IJ-Testing-Environment}
+
+
+% The preceding sections will have been written in a gentler,
+% introductory style.  You may also wish to include a reference
+% section, documenting all the functions/exceptions/constants.
+% Often, these will be placed in separate files and input like this:
+
+
+
+\appendix
+
+\section{This is an Appendix}
+
+To create an appendix in a Insight HOWTO document, use markup like
+this:
+
+\begin{verbatim}
+\appendix
+
+\section{This is an Appendix}
+
+To create an appendix in a Insight HOWTO document, ....
+
+
+\section{This is another}
+
+Just add another \section{}, but don't say \appendix again.
+\end{verbatim}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Example on how to insert a figure
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{figure}
+\center
+%\includegraphics[width=0.8\textwidth]{RegistrationComponentsDiagram.eps}
+\itkcaption[Registration Framework Components]{The basic components of the
+registration framework are two input images, a transform, a metric, an
+interpolator and an optimizer.}
+\label{fig:RegistrationComponents}
+\end{figure}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  Insert the bibliography using BibTeX
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliographystyle{plain}
+\bibliography{Article}
+
+
+\end{document}
+
