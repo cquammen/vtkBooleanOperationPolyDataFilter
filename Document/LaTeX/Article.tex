@@ -88,7 +88,7 @@ colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
 % scope of the document.
 \begin{abstract}
 \noindent
-We have written a set of classes than enable boolean operations on surface meshes defined in \code{vtkPolyData} objects using only VTK classes. Our contribution offers some feature enhancements over previous solutions, namely, preservation of mesh topology and passing point data and cell data through to outputs.
+We have written a set of classes than enable boolean operations on the space contained within surface meshes defined in \code{vtkPolyData} objects using only VTK classes. In addition to being compatible with the VTK license, our contribution preserves mesh topology and passes point data and cell data through to outputs.
 
 \end{abstract}
 
@@ -97,74 +97,81 @@ We have written a set of classes than enable boolean operations on surface meshe
 \tableofcontents
 
 \section{Introduction}
+\label{sec:Introduction}
 
 Let $A$ and $B$ be sets. A \emph{boolean operation} can be used to define a third set $C$. Three common boolean operations on sets are:
 
 \begin{description}
 
-\item Union
+\item union
 
  $C = A \cup B = \{ x \, | \, x \in A \text{ or } x \in B \}$
 
-\item Intersection
+\item intersection
 
 $C = A \cap B = \{ x \, | \, x \in A \text{ and } x \in B \}$
 
-\item Difference
+\item difference
 
 $C = A - B = \{ x \, | \, x \in A \text{ and } x \notin B \}$
 
 \end{description}
 
-In geometric modeling, a surface mesh $M_A$ may be considered the boundary of a space-filling set of 3D points $A$ if $M_A$ is a closed, orientable 2-manifold surface in 3D. Given a second surface mesh $M_B$ with the same properties, a boolean operation may be applied to obtain a third surface mesh $M_C$. These simple operations can be used to define complex geometries.
+In geometric modeling, a closed, orientable 2-manifold surface mesh in 3D $M_A$ may be considered the boundary of an infinite set of 3D points $A$. Given a second surface mesh $M_B$ with the same properties, a boolean operation may be applied to obtain a third surface mesh $M_C$. These simple operations can be used to define complex geometries.
 
-Rather than convert two mesh representations to a set of points, perform the boolean operations on those points, and reconstruct a third mesh from the resulting points, direct operations on the bounding geometry based on signed distance fields and mesh-to-mesh clipping can be used. This article describes an implementation of those methods to realize boolean operations on surfaces in VTK.
+Rather than converting two mesh representations to a set of points, performing the boolean operations on those points, and reconstructing a third mesh from the resulting points, direct operations on the bounding geometry based on signed distance fields and mesh-to-mesh clipping can be used. This article describes an implementation of those methods to realize boolean operations on surfaces in VTK.
 
 \section{Mesh-to-Mesh Signed Distance Calculation}
 
-The distance field $f(\x)$ of a mesh is defined as the distance from $\x$ to the nearest point on the mesh. The signed distance field is similar to the distance field, but the sign of the field is negative for locations $\x$ inside the mesh and positive for locations $\x$ outside the mesh. To determine whether $\x$ is inside or outside the mesh, a vector $\v = \x - \m$ is defined where $\m$ is the nearest point on the mesh. The sign of the distance field is the same as the dot product of $\v$ with the \emph{angle-weighted pseudo-normal} of the mesh at $\m$ when the mesh is a closed, orientable 2-manifold surfaces in 3D Euclidean space \cite{Baerentzen2005}.  
+The distance field $f(\x)$ of a mesh is defined as the distance from $\x$ to the nearest point on the surface defined by the mesh. The signed distance field is similar to the distance field, but the sign of the field is negative for locations $\x$ inside the space bounded by the mesh and positive for outside locations. To determine whether $\x$ is inside or outside the mesh, a vector $\v = \x - \m$ is defined where $\m$ is the nearest point on the mesh. The sign of the distance field is the same as the dot product of $\v$ with the \emph{angle-weighted pseudonormal} of the mesh at $\m$ when the mesh is a closed, orientable 2-manifold surfaces in 3D Euclidean space \cite{Baerentzen2005}.  
 
-The angle-weighted pseudo-normal is defined separately for faces, edges, and points in a mesh. For faces, it is simply the normal of the triangle. For an edge, it is the average of the normals for the faces that share the edge. For a point, it is the sum of the angle-weighted normals from each face where the weight for a face normal is the angle between the two edges of that face incident to the point.
+The angle-weighted pseudonormal is defined separately for faces, edges, and points in a mesh, and forms a discontinuous vector field over the surface defined by the mesh. For a face, it is simply the face normal. For an edge, it is the average of the normals for the faces that share the edge. For a point, it is the sum of the angle-weighted normals from each face where the weight for a face normal is the angle between the two edges of that face incident to the point.
 
-We introduce the \code{vtkImplicitPolyData} class that defines a signed distance function given an input \code{vtkPolyData}. This class is a subclass of \code{vtkImplicitFunction}, so it can be used by classes that operate on \code{vtkImplicitFunction} objects (see, e.g., \code{vtkSampleFunction}). The method XXXX is overridden to return the signed distance, and XXXX is overridden to return the angle-weighted pseudo-normal.
+We introduce the \code{vtkImplicitPolyData} class that defines a signed distance function given an input \code{vtkPolyData}. This class is a subclass of \code{vtkImplicitFunction}, so it can be used by classes that operate on \code{vtkImplicitFunction} objects (see, e.g., \code{vtkSampleFunction}). The method \code{double EvaluateFunction(double x[3])} is overridden to return the signed distance, and \code{void EvaluateGradient(double x[3], double g[3])} is overridden to return the angle-weighted pseudonormal.
 
 To support boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from the first input \code{vtkPolyData} to a second. Optionally, the distance field from the second input \code{vtkPolyData} to the first can also be computed. These distances are computed at points in the mesh and are stored as a point data field named ``Distance''.
 
-\section{Boolean Operations Using Signed Distance}
+\section{Boolean Operations on Surfaces Using Signed Distance}
 
-Boolean operations can be computed with only the signed distance field for each mesh. As the sign of the distance field at a point in the mesh corresponds to whether that point is inside (negative) or outside (positive) the other mesh, the surfaces bounding the volumes produced by the boolean operations are:
+Boolean operations can be computed with only the signed distance field for each mesh. The sign of the distance field at a point in the mesh corresponds to whether that point is inside (negative), outside (positive), or on (zero) the other mesh; the surfaces bounding the volumes produced by the boolean operations described in Section \ref{sec:Introduction} can thus be defined as:
 
 \begin{description}
 
-\item Union
+\item union
 
-The union of two meshes is the set of cells in each mesh such that the distance from each cell point to the other mesh is greater than or equal to zero.
+The set of cells in each mesh such that the distance from each cell point to the other mesh is greater than or equal to zero.
 
-\item Intersection
+\item intersection
 
-The intersection of two meshes is the set of cells in each mesh such that the distance from each cell point to the other mesh is less than or equal to zero.
+The set of cells in each mesh such that the distance from each cell point to the other mesh is less than or equal to zero.
 
-\item Difference
+\item difference
 
-Given meshes $A$ and $B$, the difference $A-B$ is defined by the cells of $A$ with positive distance from $B$ and the cells of $B$ with negative distance from $A$.
+The difference is defined as the set of cells of $M_A$ whose points are a non-negative distance from $M_B$ combined with the cells of $M_B$ whose points are a non-positive distance from $M_A$.
 
 \end{description}
 
-\section{Clipping One Surface with Another Surface}
+\section{Clipping One Surface Mesh with Another}
 
-While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the union, intersection, and difference surfaces, there is a problem. \code{vtkClipPolyData} assumes that the implicit function is piecewise linear within each cell of the \code{vtkPolyData} being clipped. However, in general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the zero-level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero-level where they should fuse seemlessly [INSERT FIGURE].
+While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, there is a problem. \code{vtkClipPolyData} treats the implicit function as piecewise linear within each cell of the \code{vtkPolyData} being clipped. In general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seemlessly [INSERT FIGURE].
 
-Instead of directly clipping the input meshes based on the signed distance evaluated at mesh points, it is necessary to split each input mesh at the actual intersection of the two surfaces (hereafter referred to as the \emph{surface intersection}). This step is the most complex part of computing boolean operations on surface meshes.
+Instead of directly clipping the input meshes based on the signed distance evaluated at mesh points, it is necessary to split each input mesh at the actual intersection of the two surfaces (hereafter referred to as the \emph{surface intersection}). All points on the zero-level of the distance field are then completely defined by the points and edges of the surface intersection, and the surface intersection marks the accurate boundary between inside and outside portions of the mesh surface. We have defined a new class \code{vtkPolyDataIntersection} that computes the surface intersection between two surface meshes and can optionally split the input meshes by the surface intersection. Its operation is described below.
 
 \subsection{Identifying the Surface Intersection}
 
-Identifying the surface intersection of a mesh with another mesh involves identifying the intersection between each triangle in the first mesh with the triangles that intersect it in the second mesh. A triangle-triangle intersection test yields two end points of the line segment defining the intersection for non-coplanar triangles; this contribution does not explicitly handle intersections between two coplanar triangles. 
+Identifying the surface intersection between two surface meshes is the most complex part of the boolean operations algorithm. It involves identifying the intersection between each triangle in the first mesh with all triangles in the second mesh that intersect it. A triangle-triangle intersection test yields two endpoints (possibly the same) of the actual line segment defining the intersection when the triangles intersect. The intersection between overlapping and co-planar triangles is more complicated; \code{vtkPolyDataIntersection} does not explicitly handle intersections between two coplanar triangles.
 
-Oriented bounding box (OBB) trees are used to accelerate the identification of triangle-triangle intersections between meshes. Two \code{vtkOBBTree} objects are instantiated, one for each input mesh. The method \code{vtkOBBTree::IntersectWithOBBTree()} is then called on one OBB tree with the second OBB tree and a callback function passed as parameters. The callback function performs exact triangle-triangle intersection tests between the triangles in overlapping nodes from the two OBB trees and stores the results in several data structures used later in the algorithm.
+Oriented bounding box (OBB) trees are used to accelerate the identification of triangle-triangle intersections between meshes. Two \code{vtkOBBTree} objects are instantiated, one for each input mesh. The method \code{vtkOBBTree::IntersectWithOBBTree()} is then called on one OBB tree with the second OBB tree and a callback function passed as parameters. The callback function performs more accurate triangle-triangle intersection tests between the triangles in overlapping nodes from the two OBB trees and stores the results in several data structures used later in the algorithm.
 
-End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkPointLocator} object with a small tolerance, leading to many fewer connected components than if the line segments were stored as ``line soup''. In addition, each end point is tested to see if it lies on each edge of the two input triangles. If so, the index of the triangle, the index of the edge, and the index of the intersecting line is associated with the index of the endpoint in a \code{std::multimap} for later use.
+End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkPointLocator} object with a small tolerance, leading to many fewer connected components than if the line segments were stored as ``line soup''. Merging the end points also simplifies later operations. In addition, each end point is tested to see if it lies on each edge of the two input triangles. If so, a key-value pair is stored in a \code{std::multimap} where the key is the ID of the endpoint and the value is a 3-tuple consisting of the index of the triangle, the index of the triangle edge, and the index of the intersecting line.
 
-The end point-edge intersection information is used to split the fully connected intersection lines to respect the topology of each input mesh. Because the end points of the intersection lines are merged during construction, they need to be split where the mesh is split. The end result should be that a copy of each line end point is produced for each set of triangles that share an edge. This can be achieved by iterating over the elements in the end point-edge intersection \code{std::multimap}, creating a copy of the point, and removing all records in the multimap where the cell ID is the same as one identified as sharing the the edge in question.
+The entries in the \code{std::multimap} described above are used to split the fully connected intersection lines to respect the topology of each input mesh. Because the end points of the intersection lines are merged during construction, they need to be split at locations where the mesh is split. For example, a mesh representing a cube often has duplicate points at the corners to store three different normals, one for each face incident to the point. These normals enable the appearance of sharp edges on the mesh. If the surface intersection on a cube splits an edge that connects two of these corners, then two points should be inserted at the split point rather than one to ensure that two face normals are defined at the split point. 
+
+XXXX work on below paragraph again
+
+More generally, the end result of splitting the surface intersection should be that a copy of each line end point is produced for each set of triangles that share an edge. This can be achieved by iterating over the key-value pairs in the multimap, appending a copy of the point corresponding to the point ID in the key to the end of the \code{vtkPoints} object storing the endpoints, and removing all records in the multimap where the point ID is the same as the first point and the cell ID marks a cell that shares the edge identified in the first record. The point indices of the lines within the cells that share an edge are renumbered to the ID of the new point in the \code{vtkPoints} object. Finally, the point ID and the cell ID from one of the cells that shares the edge is stored in a point-to-cell map for future use in interpolating point data at the new point. It does not matter which cell ID is associated with a point on the edge of a cell because the interpolation results will be the same.
+
+The points in the input mesh and their associated point data are copied to the points in the output mesh. The points from the intersection lines are then appended to the point set in the output mesh, and the point data is interpolated at those points. 
 
 \subsection{Splitting the Mesh}
 
@@ -187,13 +194,17 @@ Splitting proceeds on a cell-by-cell basis. For each cell that needs splitting, 
 \item Points from neighboring cells that lie on a cell edge but which were not already added in 4.
 \end{enumerate}
 
-The lines collected above are used to constrain the new triangulation of the points. That is to say, these lines should be present in the output mesh. Special processing of the boundary lines is required to achieve the desired split. Specifically, boundary lines must be split at points that lie on them. Boundary line splitting is achieved by sorting points on the boundary lines according to the angle between the first edge of the cell and the vector formed by subtracting the cell center from the point and connecting points adjacent to each other with lines. Because the last boundary point is connected to the first, the absolute order of the boundary points is not important.
+The lines collected above are used to constrain a new triangulation of the points. In other words, these lines will be present in the output mesh. Special processing of the boundary lines is required to achieve the desired split. Specifically, boundary lines must be split at points that lie on them. Boundary line splitting is achieved by sorting points on the boundary lines according to the angle between the first edge of the cell and the vector formed by subtracting the cell center from the point. Adjacent points in the sorted list are then connected with lines, include a line between the last and first points in the list. Because the last boundary point is connected to the first, the absolute order of the boundary points is not important.
 
-The \code{vtkDelaunay2D} class can be used to determine a triangulation from the cell, surface intersection lines, and boundary points and lines. A transformation of the points collected above that rotates them to the XY-plane is calculated is computed and set as the transform for the \code{vtkDelaunay2D} object. A new \code{vtkPolyData} object that contains the collected points and lines is defined and passed as both the input and constraint source to a \code{vtkDelaunay2D} object. The line point indices are renumbered to point to their locations in the new \code{vtkPolyData} object, and a map back to their original indices is created to remap the output cell indices from the triangulation to the point indices in the output mesh. If a point in the surface intersection is within some small tolerance distance from a point in the surface mesh, the point in the surface mesh is used instead.
+The \code{vtkDelaunay2D} class can be used to determine a triangulation from the cell, surface intersection lines, and boundary points and lines. A transformation of the points collected above that rotates them to the XY-plane is computed and set as the transform for the \code{vtkDelaunay2D} object. A new \code{vtkPolyData} object that contains the collected points and lines is defined and passed as both the input and constraint source to a \code{vtkDelaunay2D} object. The line point indices are renumbered to point to their locations in the new \code{vtkPolyData} object, and a map from the original indices is created to remap the output cell indices from the triangulation to the point indices in the output mesh. If a point in the surface intersection is within some small tolerance distance from a point in the surface mesh, the point in the surface mesh is used instead. This prevents unintentional splitting of the surface mesh.
+
+\section{Results}
+
+XXXX Show pictures of various objects with boolean operations applied to them.
 
 \section{Limitations}
 
-These classes do not properly handle intersections between coplanar triangles. When such an intersection event has been detected, the intersection information is discarded. Such intersections likely occur when portions of the meshes are immediately adjacent to each other, however, and their exclusion from the surface-to-surface intersection information will usually not affect the mesh splitting results.
+The \code{vtkPolyDataIntersection} class operates only on triangulated surface meshes, and it does not properly handle intersections between coplanar triangles. When such an intersection event has been detected, the intersection information is discarded. If this occurs, then the output of a boolean operation may not be exactly correct at the location of the co-planar triangles.
 
 \section{Software Requirements}
 
@@ -205,14 +216,14 @@ The source code contributed with this article has been build against VTK 5.8.
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{figure}
-\center
+%\begin{figure}
+%\center
 %\includegraphics[width=0.8\textwidth]{RegistrationComponentsDiagram.eps}
-\itkcaption[Registration Framework Components]{The basic components of the
-registration framework are two input images, a transform, a metric, an
-interpolator and an optimizer.}
-\label{fig:RegistrationComponents}
-\end{figure}
+%\itkcaption[Registration Framework Components]{The basic components of the
+%registration framework are two input images, a transform, a metric, an
+%interpolator and an optimizer.}
+%\label{fig:RegistrationComponents}
+%\end{figure}
 
 
 
