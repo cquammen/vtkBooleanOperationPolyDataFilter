@@ -200,7 +200,7 @@ The difference is defined as the set of cells of $M_A$ whose points are a non-ne
 
 \section{Clipping One Surface Mesh with Another}
 
-While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, there is a problem. \code{vtkClipPolyData} treats the implicit function as piecewise linear within each cell of the \code{vtkPolyData} being clipped. In general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seamlessly.
+While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, doing so would produce inaccurate results. \code{vtkClipPolyData} treats the implicit function as piecewise linear within each cell of the \code{vtkPolyData} being clipped. In general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seamlessly. Figure \ref{fig:DistanceZeroLevelVsIntersection} shows an example where the zero level of the distance field (black) does not match the surface intersection (white). 
 
 \begin{figure}[t]
 \centering
@@ -209,7 +209,7 @@ While it seems possible to use the class \code{vtkClipPolyData} together with \c
 \label{fig:DistanceZeroLevelVsIntersection}
 \end{figure}
 
-Instead of directly clipping the input meshes based on the signed distance evaluated at mesh points, it is necessary to split each input mesh at the actual intersection of the two surfaces (hereafter referred to as the \emph{surface intersection}). All points on the zero-level of the distance field are then completely defined by the points and edges of the surface intersection, and the surface intersection marks the accurate boundary between inside and outside portions of the mesh surface. We have defined a new class \code{vtkPolyDataIntersection} that computes the surface intersection between two surface meshes and can optionally split the input meshes by the surface intersection. Its operation is described below.
+Instead of clipping the input meshes based on the signed distance evaluated at mesh points, it is necessary to split each input mesh at the actual intersection of the two surfaces (hereafter referred to as the \emph{surface intersection}). All points on the zero-level of the distance field are then completely defined by the points and edges of the surface intersection, and the surface intersection marks the accurate boundary between inside and outside portions of the mesh surface.
 
 \subsection{Identifying the Surface Intersection}
 
@@ -266,10 +266,31 @@ The lines collected above are used to constrain a new triangulation of the point
 
 The \code{vtkDelaunay2D} class can be used to determine a triangulation from the cell, surface intersection lines, and boundary points and lines. A transformation of the points collected above that rotates them to the XY-plane is computed and set as the transform for the \code{vtkDelaunay2D} object. A new \code{vtkPolyData} object that contains the collected points and lines is defined and passed as both the input and constraint source to a \code{vtkDelaunay2D} object. The line point indices are renumbered to point to their locations in the new \code{vtkPolyData} object, and a map from the original indices is created to remap the output cell indices from the triangulation to the point indices in the output mesh. If a point in the surface intersection is within some small tolerance distance from a point in the surface mesh, the point in the surface mesh is used instead. This prevents unintentional splitting of the surface mesh.
 
+\subsection{vtkPolyDataIntersection}
+
+We have defined a new class \code{vtkPolyDataIntersection} that computes the surface intersection between two surface meshes and can optionally split the input meshes by the surface intersection. The surface meshes must consist of triangles. Two options are available for this filter:
+\begin{verbatim}
+void SetSplitFirstOutput(int value);
+void SplitFirstOutputOn();
+void SplitFirstOutputOff();
+
+void SetSplitSecondOutput(int value);
+void SplitSecondOutputOn();
+void SplitSecondOutputOff();
+\end{verbatim}
+These options specify whether the output meshes should be split. Each option is on by default.
+
+XXXX Change this in the source code documentation.
+
 \section{Putting it All Together}
 
-To compute a surface resulting from a boolean operation on surface meshes, the following pipeline of classes can be used to compute the desired surface: 
+There are two ways to compute the surface mesh resulting from a boolean operation on two surface meshes.
 
+\subsection{Setting up a VTK Pipeline}
+
+To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two instances of \code{vtkThreshold} and two instances of \code{vtkDataSetSurfaceFilter} are required to select different portions from each of the input geometries.
+
+\begin{figure}[h]
 \begin{center}
 \code{vtkPolyDataIntersection}
 
@@ -289,11 +310,29 @@ $\searrow$ \hspace{3em} $\swarrow$
 
 \code{vtkAppendPolyData}
 \end{center}
+\itkcaption{Possible pipeline to be used to compute results of boolean operations on surface meshes.}
+\label{fig:Pipeline}
+\end{figure}
 
-The two instances of \code{vtkThreshold} and two instances of \code{vtkDataSetSurfaceFilter} are required to select different portions from each of the input geometries.
+\subsection{vtkPolyDataBooleanOperationFilter}
 
-For convenience, we have included a single class that replicates the functionality  class for computing boolean operations on surface meshes, \code{vtkPolyDataBooleanOperationFilter}, that encapsulates the functionality of the pipeline above.
+For convenience, we have included a single class that replicates the functionality  class for computing boolean operations on surface meshes, \code{vtkPolyDataBooleanOperationFilter}, that encapsulates the functionality of the pipeline above. This class has three options. The desired boolean operation is specified with one of
+\begin{verbatim}
+void SetOperationToUnion();
+void SetOperationToIntersection();
+void SetOperationToDifference();
+void SetOperation(int operation);
+\end{verbatim}
+The default operation is union.
 
+When computing the difference boolean operation, part of the resulting surface mesh will have reversed normals and a reversed order of cell points. The ReorientDifferenceCells option is used to enable reversal of the normals and reorientation of these cells and can be set using the methods
+\begin{verbatim}
+void SetReorientDifferenceCells(int value);
+void ReorientDifferenceCellsOn();
+void ReorientDifferenceCellsOff();
+\end{verbatim} 
+
+Lastly, the Tolerance sets a threshold on the absolute value of a distance field value below which the distance is considered to be zero.
 \section{Results}
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
