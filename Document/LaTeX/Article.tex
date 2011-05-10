@@ -130,6 +130,20 @@ The angle-weighted pseudonormal is defined separately for faces, edges, and poin
 
 We introduce the \code{vtkImplicitPolyData} class that defines a signed distance function given an input \code{vtkPolyData}. This class is a subclass of \code{vtkImplicitFunction}, so it can be used by classes that operate on \code{vtkImplicitFunction} objects (see, e.g., \code{vtkSampleFunction}). The method \code{double EvaluateFunction(double x[3])} is overridden to return the signed distance, and \code{void EvaluateGradient(double x[3], double g[3])} is overridden to return the angle-weighted pseudonormal.
 
+The class \code{vtkImplicitPolyData} has several options that can be set. Use
+\begin{verbatim}
+void SetNoValue(double value);
+\end{verbatim}
+to set the value returned by \code{double EvaluateFunction(double x[3])} when an error occurs. Likewise,
+\begin{verbatim}
+void SetNoGradient(double value[3]);
+\end{verbatim}
+to set the gradient returned when an error is encountered. Finally,
+\begin{verbatim}
+void SetTolerance(double tolerance);
+\end{verbatim}
+is used to determine when the absolute value of the signed distance is close enough to zero to be considered zero.
+
 To support boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from the first input \code{vtkPolyData} to a second. Optionally, the distance field from the second input \code{vtkPolyData} to the first can also be computed. These distances are computed at points in the mesh and are stored as a point data field named ``Distance''.
 
 \section{Boolean Operations on Surfaces Using Signed Distance}
@@ -252,7 +266,7 @@ For convenience, we have included a single class that replicates the functionali
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
 
-\input{ResultsFigure.tex}
+%\input{ResultsFigure.tex}
 
 \section{Limitations}
 
