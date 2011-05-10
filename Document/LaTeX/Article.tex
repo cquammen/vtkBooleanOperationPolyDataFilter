@@ -153,19 +153,26 @@ The difference is defined as the set of cells of $M_A$ whose points are a non-ne
 
 \section{Clipping One Surface Mesh with Another}
 
-While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, there is a problem. \code{vtkClipPolyData} treats the implicit function as piecewise linear within each cell of the \code{vtkPolyData} being clipped. In general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seemlessly [INSERT FIGURE].
+While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, there is a problem. \code{vtkClipPolyData} treats the implicit function as piecewise linear within each cell of the \code{vtkPolyData} being clipped. In general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seamlessly. XXXX Figure
 
 Instead of directly clipping the input meshes based on the signed distance evaluated at mesh points, it is necessary to split each input mesh at the actual intersection of the two surfaces (hereafter referred to as the \emph{surface intersection}). All points on the zero-level of the distance field are then completely defined by the points and edges of the surface intersection, and the surface intersection marks the accurate boundary between inside and outside portions of the mesh surface. We have defined a new class \code{vtkPolyDataIntersection} that computes the surface intersection between two surface meshes and can optionally split the input meshes by the surface intersection. Its operation is described below.
 
 \subsection{Identifying the Surface Intersection}
 
-Identifying the surface intersection between two surface meshes is the most complex part of the boolean operations algorithm. It involves identifying the intersection between each triangle in the first mesh with all triangles in the second mesh that intersect it. A triangle-triangle intersection test yields two endpoints (possibly the same) of the actual line segment defining the intersection when the triangles intersect. The intersection between overlapping and co-planar triangles is more complicated; \code{vtkPolyDataIntersection} does not explicitly handle intersections between two coplanar triangles.
+Identifying the surface intersection between two surface meshes is the most complex part of the boolean operations algorithm. It involves identifying the intersection between each triangle in the first mesh with all triangles in the second mesh that intersect it. A triangle-triangle intersection test yields two endpoints (possibly the same) of the actual line segment defining the intersection when the triangles intersect. If the endpoints are the same, then the intersection line is degenerate, and it is not added to the set of intersection lines. The intersection between overlapping and co-planar triangles is more complicated; \code{vtkPolyDataIntersection} does not explicitly handle intersections between two coplanar triangles.
 
 Oriented bounding box (OBB) trees are used to accelerate the identification of triangle-triangle intersections between meshes. Two \code{vtkOBBTree} objects are instantiated, one for each input mesh. The method \code{vtkOBBTree::IntersectWithOBBTree()} is then called on one OBB tree with the second OBB tree and a callback function passed as parameters. The callback function performs more accurate triangle-triangle intersection tests between the triangles in overlapping nodes from the two OBB trees and stores the results in several data structures used later in the algorithm.
 
 End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkPointLocator} object with a small tolerance, leading to many fewer connected components than if the line segments were stored as ``line soup''. Merging the end points also simplifies later operations. In addition, each end point is tested to see if it lies on each edge of the two input triangles. If so, a key-value pair is stored in a \code{std::multimap} where the key is the ID of the endpoint and the value is a 3-tuple consisting of the index of the triangle, the index of the triangle edge, and the index of the intersecting line.
 
-The entries in the \code{std::multimap} described above are used to split the fully connected intersection lines to respect the topology of each input mesh. Because the end points of the intersection lines are merged during construction, they need to be split at locations where the mesh is split. For example, a mesh representing a cube often has duplicate points at the corners to store three different normals, one for each face incident to the point. These normals enable the appearance of sharp edges on the mesh. If the surface intersection on a cube splits an edge that connects two of these corners, then two points should be inserted at the split point rather than one to ensure that two face normals are defined at the split point. 
+The entries in the \code{std::multimap} described above are used to split the fully connected intersection lines to respect the topology of each input mesh. Because the end points of the intersection lines are merged during construction, they need to be split at locations where the mesh is split. For example, as shown in Figure \ref{fig:BoxVectors}, a mesh representing a cube often has duplicate points at the corners to store three different normals, one for each face incident to the point. These normals enable the appearance of sharp edges on the mesh. If the surface intersection on a cube splits an edge that connects two of these corners, then two points should be inserted at the split point rather than one to ensure that two face normals are defined at the split point.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{Figures/BoxNormals}
+\itkcaption{Splitting a mesh with duplicate normals. The box object has three duplicate points at each corner each of which has a different normal (gray arrows). The surface intersection between the box in the front (gray, solid) and the box in the back (white, outline) is shown in green. Points from the intersection lines that lie on the duplicate edges of the box are also duplicated by the mesh splitting procedure in \code{vtkPolyDataIntersection}. The normal at a duplicated point, along with other point data, is interpolated from the cell that contains the intersection line that references the point.}
+\label{fig:BoxNormals}
+\end{figure}
 
 XXXX work on below paragraph again
 
@@ -184,15 +191,22 @@ After the intersection lines are split for a mesh, the next step is to identify 
 
 The second case is important because one of the mesh-mesh intersection lines may have an endpoint on the edge of one cell, but no line that uses that endpoint on the cell neighbor across that edge. The cell neighbor needs to be split to avoid introducing a T-junction and therefore a hole in the output mesh.
 
-Splitting proceeds on a cell-by-cell basis. For each cell that needs splitting, the following data is gathered:
+Splitting proceeds on a cell-by-cell basis. For each cell that needs splitting, the following points and lines are gathered:
 
 \begin{enumerate}
-\item The three points that define the cell.
-\item The boundary lines of the cell.
-\item The split intersection lines that lie in the cell (if any).
-\item The points that define the lines in 3.
-\item Points from neighboring cells that lie on a cell edge but which were not already added in 4.
+\item The three points that define the cell (green spheres in Figure \ref{fig:CellSplitSetup}).
+\item The boundary lines of the cell (red lines in Figure \ref{fig:CellSplitSetup}).
+\item The split intersection lines that lie in the cell (if any) (white lines in Figure \ref{fig:CellSplitSetup}).
+\item The points that define the lines in 3 (purple spheres in Figure \ref{fig:CellSplitSetup}).
+\item Points from neighboring cells that lie on a cell edge but which were not already added in 4 (orange sphere in Figure \ref{fig:CellSplitSetup}).
 \end{enumerate}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{Figures/CellSplitSetup}
+\caption{The points and lines required for splitting a cell.}
+\label{fig:CellSplitSetup}
+\end{figure}
 
 The lines collected above are used to constrain a new triangulation of the points. In other words, these lines will be present in the output mesh. Special processing of the boundary lines is required to achieve the desired split. Specifically, boundary lines must be split at points that lie on them. Boundary line splitting is achieved by sorting points on the boundary lines according to the angle between the first edge of the cell and the vector formed by subtracting the cell center from the point. Adjacent points in the sorted list are then connected with lines, include a line between the last and first points in the list. Because the last boundary point is connected to the first, the absolute order of the boundary points is not important.
 
