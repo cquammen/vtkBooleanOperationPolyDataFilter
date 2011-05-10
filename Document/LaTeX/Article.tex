@@ -130,6 +130,8 @@ The angle-weighted pseudonormal is defined separately for faces, edges, and poin
 
 We introduce the \code{vtkImplicitPolyData} class that defines a signed distance function given an input \code{vtkPolyData}. This class is a subclass of \code{vtkImplicitFunction}, so it can be used by classes that operate on \code{vtkImplicitFunction} objects (see, e.g., \code{vtkSampleFunction}). The method \code{double EvaluateFunction(double x[3])} is overridden to return the signed distance, and \code{void EvaluateGradient(double x[3], double g[3])} is overridden to return the angle-weighted pseudonormal.
 
+\subsection{vtkImplicitPolyData}
+
 The class \code{vtkImplicitPolyData} has several options that can be set. Use
 \begin{verbatim}
 void SetNoValue(double value);
@@ -144,7 +146,37 @@ void SetTolerance(double tolerance);
 \end{verbatim}
 is used to determine when the absolute value of the signed distance is close enough to zero to be considered zero.
 
-To support boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from the first input \code{vtkPolyData} to a second. Optionally, the distance field from the second input \code{vtkPolyData} to the first can also be computed. These distances are computed at points in the mesh and are stored as a point data field named ``Distance''.
+\subsection{vtkPolyDataDistance}
+
+To support distance-based boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from points in the first input \code{vtkPolyData} to a second by evaluating the signed distance field from the second input using the \code{vtkImplicitPolyData} class. Optionally, the distance from points in the second input \code{vtkPolyData} to the first can also be computed. These distances are stored as a point data field named ``Distance''.
+
+\code{vtkPolyDataDistance} has some options. Use the methods
+\begin{verbatim}
+void SetSignedDistance(int value);
+void SignedDistanceOn();
+void SignedDistanceOff();
+\end{verbatim}
+to turn computation of the signed distance on or off. By default, this option is on. If it is off, the unsigned distance function is computed.
+
+The methods
+\begin{verbatim}
+void SetNegateDistance(int value);
+void NegateDistanceOn();
+void NegateDistanceOff();
+\end{verbatim}
+can be used to enable or disable negation of the signed distance field. If the \code{SignedDistance} option is off, then this option has no effect. \code{NegateDistance} option is off by default.
+
+The methods
+\begin{verbatim}
+void SetComputeSecondDistance(int value);
+void ComputeSecondDistanceOn();
+void ComputeSecondDistanceOff();
+\end{verbatim}
+enables computation of the signed distance for the second input. Finally, a convenience method
+\begin{verbatim}
+vtkPolyData* GetSecondDistanceOutput();
+\end{verbatim}
+can be called to get the second output.
 
 \section{Boolean Operations on Surfaces Using Signed Distance}
 
