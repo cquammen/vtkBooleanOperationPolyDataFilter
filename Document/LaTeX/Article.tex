@@ -292,23 +292,31 @@ These options specify whether the output meshes should be split. Each option is 
 
 \section{Putting it All Together}
 
-There are two ways to compute the surface mesh resulting from a boolean operation on two surface meshes.
+There are two ways to compute the surface mesh resulting from a boolean operation on two surface meshes: setting up a VTK pipeline or using a new class \code{vtkPolyDataBooleanOperationFilter}.
 
 \subsection{Setting up a VTK Pipeline for Boolean Operations on Surfaces}
 
-To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two instances of \code{vtkThreshold} and two instances of \code{vtkDataSetSurfaceFilter} are required to select different portions from each of the input geometries.
+To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two instances of \code{vtkThreshold} are required to select different portions from each of the input geometries.
 
 \begin{figure}[h]
 \begin{center}
 \code{vtkPolyDataIntersection}
 
+$\downarrow$
+
+\code{vtkPolyDataDistance}
+
 $\swarrow$ \hspace{3em} $\searrow$
 
-\code{vtkImplicitPolyData} $\rightarrow$ \code{vtkClipPolyData} \hspace{1em} \code{vtkClipPolyData} $\leftarrow$ \code {vtkImplicityPolyData}
+\code{vtkThreshold} \hspace{1em} \code{vtkThreshold}
 
 $\searrow$ \hspace{3em} $\swarrow$
 
-\code{vtkAppendPolyData}
+\code{vtkAppendFilter}
+
+$\downarrow$
+
+\code{vtkDataSetSurfaceFilter}
 \end{center}
 \itkcaption{Possible pipeline to be used to compute results of boolean operations on surface meshes.}
 \label{fig:Pipeline}
@@ -337,15 +345,15 @@ Lastly, the \code{Tolerance} sets a threshold on the absolute value of a distanc
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
 
-\input{ResultsFigure.tex}
+%\input{ResultsFigure.tex}
 
 \section{Limitations}
 
-The \code{vtkPolyDataIntersection} class operates only on triangulated surface meshes, and it does not properly handle intersections between coplanar triangles. When such an intersection event has been detected, the intersection information is discarded. If this occurs, then the output of a boolean operation may not be exactly correct at the location of the co-planar triangles.
+The \code{vtkPolyDataIntersection} class operates only on triangulated surface meshes, and it does not properly handle intersections between coplanar triangles. When two triangles are determined to be coplanar, the intersection information is discarded. If this occurs, then the output of a boolean operation may not be exactly correct at the location of the coplanar triangles.
 
 \section{Software Requirements}
 
-The source code contributed with this article has been built against VTK 5.8.
+The source code contributed with this article has been built against VTK git commit 9f132a45a7bece15d77ad74723c6378f2f29d869.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
