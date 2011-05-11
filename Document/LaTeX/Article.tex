@@ -89,7 +89,7 @@ colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
 % scope of the document.
 \begin{abstract}
 \noindent
-We have written a set of classes than enable boolean operations on the space contained within surface meshes defined in \code{vtkPolyData} objects using only VTK classes. In addition to being compatible with the VTK license, our contribution preserves mesh topology and passes point data and cell data through to outputs.
+We have written a set of classes than enable computation of boolean operations on surface meshes using only VTK classes. In addition to being compatible with the VTK license, our contribution preserves surface mesh topology (to the extent possible) and passes point data and cell data through to the output mesh where possible.
 
 \end{abstract}
 
@@ -224,15 +224,17 @@ The entries in the \code{std::multimap} described above are used to split the fu
 \begin{figure}
 \centering
 \includegraphics[scale=0.25]{Figures/BoxNormals}
-\itkcaption{Splitting a mesh with duplicate normals. The box object has three duplicate points at each corner each of which has a different normal (gray arrows). The surface intersection between the box in the front (gray, solid) and the box in the back (white, outline) is shown in green. Points from the intersection lines that lie on the duplicate edges of the box are also duplicated by the mesh splitting procedure in \code{vtkPolyDataIntersection}. The normal at a duplicated point, along with other point data, is interpolated from the cell that contains the intersection line that references the point.}
+\itkcaption{Splitting a mesh with duplicate normals. The box object has three duplicate points at each corner each of which has a different normal (gray arrows). The surface intersection between the box in the front (gray, solid) and the box in the back (white, outline) is shown in green. Points from the intersection lines that lie on the duplicate edges of the box are also duplicated by the mesh splitting procedure in \code{vtkPolyDataIntersection}. The normal at a duplicated point, along with other point data, is interpolated from the cell that contains the intersection line that references that point.}
 \label{fig:BoxNormals}
 \end{figure}
 
-XXXX work on below paragraph again
+More generally, the end result of splitting the surface intersection should be that a copy of each line end point is produced for each set of triangles that share an edge. This is done by iterating over the entries of the edge point multimap. The first time a particular point ID is encountered in a multimap key-value pair, all other entries with the same key are checked to determine if the cell with the cell ID in the value shares the edge indicated by the first entry's value. If the entry is for a shared edge, then the entry is removed from the multimap and not processed any further. If not, the entry is left in the multimap for further processing.
 
-More generally, the end result of splitting the surface intersection should be that a copy of each line end point is produced for each set of triangles that share an edge. This can be achieved by iterating over the key-value pairs in the multimap, appending a copy of the point corresponding to the point ID in the key to the end of the \code{vtkPoints} object storing the endpoints, and removing all records in the multimap where the point ID is the same as the first point and the cell ID marks a cell that shares the edge identified in the first record. The point indices of the lines within the cells that share an edge are renumbered to the ID of the new point in the \code{vtkPoints} object. Finally, the point ID and the cell ID from one of the cells that shares the edge is stored in a point-to-cell map for future use in interpolating point data at the new point. It does not matter which cell ID is associated with a point on the edge of a cell because the interpolation results will be the same.
+If any multimap entries are left that have the current point ID as key, then that point lies on a split in the mesh and requires duplication. In this case, a copy of the point is inserted into the list of points for the intersection line data structure, and the first such entry in the multimap is read. All other entries in the multimap with the point ID as key are again examined to determine which share an edge with the first entry. Entries that do not share an edge are left in the multimap. For entries that share an edge, the point ID in the line referenced by the line ID stored in the entry is replaced with the ID of the newly duplicated point. The entry is then removed from the multimap. The process described in this paragraph is repeated if any entries are left that have the current point ID as key. Otherwise, the first multimap entry is removed.
 
-The points in the input mesh and their associated point data are copied to the points in the output mesh. The points from the intersection lines are then appended to the point set in the output mesh, and the point data is interpolated at those points. 
+During the above process, another auxiliary data structure is built. Every time a point is duplicated, a key-value pair is added to a map where the key is the point ID and the value is the cell ID from which the point data at the point should be interpolated. It does not matter which cell ID from the set of cells that share an edge is associated with a point on that edge because the interpolation results will be the same.
+
+After the intersection lines are split, the points in the input mesh and their associated point data are copied to the points in the output mesh. The points from the intersection lines are then appended to the point set in the output mesh, and the point data is interpolated at those points. 
 
 \subsection{Splitting the Mesh}
 
@@ -286,7 +288,7 @@ XXXX Change this in the source code documentation.
 
 There are two ways to compute the surface mesh resulting from a boolean operation on two surface meshes.
 
-\subsection{Setting up a VTK Pipeline}
+\subsection{Setting up a VTK Pipeline for Boolean Operations on Surfaces}
 
 To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two instances of \code{vtkThreshold} and two instances of \code{vtkDataSetSurfaceFilter} are required to select different portions from each of the input geometries.
 
@@ -300,11 +302,11 @@ $\downarrow$
 
 $\swarrow$ \hspace{3em} $\searrow$
 
-\code{vtkThreshold} \code{vtkThreshold}
+\code{vtkThreshold} \hspace{1em} \code{vtkThreshold}
 
-$\downarrow$ \hspace{5em}  $\downarrow$
+$\downarrow$ \hspace{6em}  $\downarrow$
 
-\code{vtkDataSetSurfaceFilter} \code{vtkDataSetSurfaceFilter}
+\code{vtkDataSetSurfaceFilter} \hspace{1em} \code{vtkDataSetSurfaceFilter}
 
 $\searrow$ \hspace{3em} $\swarrow$
 
@@ -325,14 +327,14 @@ void SetOperation(int operation);
 \end{verbatim}
 The default operation is union.
 
-When computing the difference boolean operation, part of the resulting surface mesh will have reversed normals and a reversed order of cell points. The ReorientDifferenceCells option is used to enable reversal of the normals and reorientation of these cells and can be set using the methods
+When computing the difference boolean operation, part of the resulting surface mesh will have reversed normals and a reversed order of cell points. The \code{ReorientDifferenceCells} option is used to enable reversal of the normals and reorientation of these cells and can be set using the methods
 \begin{verbatim}
 void SetReorientDifferenceCells(int value);
 void ReorientDifferenceCellsOn();
 void ReorientDifferenceCellsOff();
 \end{verbatim} 
 
-Lastly, the Tolerance sets a threshold on the absolute value of a distance field value below which the distance is considered to be zero.
+Lastly, the \code{Tolerance} sets a threshold on the absolute value of a distance field value below which the distance is considered to be zero.
 \section{Results}
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
