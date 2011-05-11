@@ -122,6 +122,14 @@ In geometric modeling, a closed, orientable 2-manifold surface mesh in 3D $M_A$ 
 
 Rather than converting two mesh representations to a set of points, performing the boolean operations on those points, and reconstructing a third mesh from the resulting points, direct operations on the bounding geometry based on signed distance fields and mesh-to-mesh clipping can be used. This article describes an implementation of those methods to realize boolean operations on surfaces in VTK.
 
+\section{Previous Work}
+
+Lloyd previously contributed a VTK class for computing boolean operations on surface meshes. His contribution wrapped the GNU Triangulated Surface Library (GTS) in a VTK class that performed conversion between the VTK mesh data structure and the GTS mesh data structure and vice versa. This work filled a need often requested by users on the VTK mailing lists.
+
+Unfortunately, his work is unable to be incorporated into the main VTK repository because of the  incompatible GTS license. Furthermore, any projects using Lloyd's contribution are subject to the licensing requirements of GTS. Our contribution is not subject to an incompatible license as it makes use of no external libraries or code.
+
+Furthermore, our contribution copies point and cell data from the input meshes to the output meshes appropriately, interpolating point data where necessary. When portions of two input meshes are combined into one mesh, only the common point and cell data in both meshes is copied to the output.
+
 \section{Mesh-to-Mesh Signed Distance Calculation}
 
 The distance field $f(\x)$ of a mesh is defined as the distance from $\x$ to the nearest point on the surface defined by the mesh. The signed distance field is similar to the distance field, but the sign of the field is negative for locations $\x$ inside the space bounded by the mesh and positive for outside locations. To determine whether $\x$ is inside or outside the mesh, a vector $\v = \x - \m$ is defined where $\m$ is the nearest point on the mesh. The sign of the distance field is the same as the dot product of $\v$ with the \emph{angle-weighted pseudonormal} of the mesh at $\m$ when the mesh is a closed, orientable 2-manifold surfaces in 3D Euclidean space \cite{Baerentzen2005}.  
@@ -282,8 +290,6 @@ void SplitSecondOutputOff();
 \end{verbatim}
 These options specify whether the output meshes should be split. Each option is on by default.
 
-XXXX Change this in the source code documentation.
-
 \section{Putting it All Together}
 
 There are two ways to compute the surface mesh resulting from a boolean operation on two surface meshes.
@@ -296,17 +302,9 @@ To compute a surface resulting from a boolean operation on surface meshes, the p
 \begin{center}
 \code{vtkPolyDataIntersection}
 
-$\downarrow$
-
-\code{vtkPolyDataDistance}
-
 $\swarrow$ \hspace{3em} $\searrow$
 
-\code{vtkThreshold} \hspace{1em} \code{vtkThreshold}
-
-$\downarrow$ \hspace{6em}  $\downarrow$
-
-\code{vtkDataSetSurfaceFilter} \hspace{1em} \code{vtkDataSetSurfaceFilter}
+\code{vtkImplicitPolyData} $\rightarrow$ \code{vtkClipPolyData} \hspace{1em} \code{vtkClipPolyData} $\leftarrow$ \code {vtkImplicityPolyData}
 
 $\searrow$ \hspace{3em} $\swarrow$
 
@@ -339,7 +337,7 @@ Lastly, the \code{Tolerance} sets a threshold on the absolute value of a distanc
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
 
-%\input{ResultsFigure.tex}
+\input{ResultsFigure.tex}
 
 \section{Limitations}
 
