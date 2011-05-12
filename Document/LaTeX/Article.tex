@@ -32,7 +32,7 @@ colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
 
 % The title should be descriptive enough for people to be able to find
 % the relevant document. 
-\title{Boolean Operations for Surfaces in VTK Without External Libraries}
+\title{Boolean Operations on Surfaces in VTK Without External Libraries}
 
 % 
 % NOTE: This is the last number of the "handle" URL that 
@@ -89,7 +89,7 @@ colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
 % scope of the document.
 \begin{abstract}
 \noindent
-We have written a set of classes than enable computation of boolean operations on surface meshes using only VTK classes. In addition to being compatible with the VTK license, our contribution preserves surface mesh topology (to the extent possible) and passes point data and cell data through to the output mesh where possible.
+We have written a set of classes than enable computation of boolean operations on surface meshes using only VTK classes. In addition to being compatible with the VTK license, our contribution preserves surface mesh topology to the extent possible in boolean operations and passes point data and cell data through to the output mesh where possible.
 
 \end{abstract}
 
@@ -118,17 +118,17 @@ $C = A - B = \{ x \, | \, x \in A \text{ and } x \notin B \}$
 
 \end{description}
 
-In geometric modeling, a closed, orientable 2-manifold surface mesh in 3D $M_A$ may be considered the boundary of an infinite set of 3D points $A$. Given a second surface mesh $M_B$ with the same properties, a boolean operation may be applied to obtain a third surface mesh $M_C$. These simple operations can be used to define complex geometries.
+In geometric modeling, a closed, orientable 2-manifold surface mesh in 3D $M_A$ may be considered the boundary of an infinite set of 3D points $A$. Given a second surface mesh $M_B$ with the same properties, a boolean operation may be applied to obtain a third surface mesh $M_C$ that bounds the infinite set of points $C$ resulting from the boolean operation on $A$ and $B$. For brevity, we use the phrase ``boolean operation on surfaces'' to refer to the process of determining $M_C$ from $M_A$, $M_B$, and a boolean operation. These simple operations can be used to define complex geometries.
 
-Rather than converting two mesh representations to a set of points, performing the boolean operations on those points, and reconstructing a third mesh from the resulting points, direct operations on the bounding geometry based on signed distance fields and mesh-to-mesh clipping can be used. This article describes an implementation of those methods to realize boolean operations on surfaces in VTK.
+Rather than somehow converting two mesh representations to a set of points, performing the boolean operations on those points, and reconstructing a third mesh from the resulting points, direct operations on the bounding geometry based on signed distance fields and mesh-to-mesh clipping can be used. This article describes an implementation of those methods to realize boolean operations on surfaces in VTK.
 
 \section{Previous Work}
 
-Lloyd previously contributed a VTK class for computing boolean operations on surface meshes. His contribution wrapped the GNU Triangulated Surface Library (GTS) in a VTK class that performed conversion between the VTK mesh data structure and the GTS mesh data structure and vice versa. This work filled a need often requested by users on the VTK mailing lists.
+Lloyd previously contributed a VTK class for computing boolean operations on surface meshes \cite{Lloyd2010}. His contribution wrapped the GNU Triangulated Surface Library (GTS) in a VTK class that performed conversion between the VTK mesh data structure and the GTS mesh data structure and vice versa. This work filled a need often requested by users on the VTK mailing lists.
 
 Unfortunately, his work is unable to be incorporated into the main VTK repository because of the  incompatible GTS license. Furthermore, any projects using Lloyd's contribution are subject to the licensing requirements of GTS. Our contribution is not subject to an incompatible license as it makes use of no external libraries or code.
 
-Furthermore, our contribution copies point and cell data from the input meshes to the output meshes appropriately, interpolating point data where necessary. When portions of two input meshes are combined into one mesh, only the common point and cell data in both meshes is copied to the output.
+Furthermore, our contribution extend's Lloyd's work by copying point and cell data from the input meshes to the output meshes appropriately, interpolating point data where necessary. When portions of two input meshes are combined into one mesh, the common point and cell data in both meshes is copied to the output.
 
 \section{Mesh-to-Mesh Signed Distance Calculation}
 
@@ -140,7 +140,11 @@ We introduce the \code{vtkImplicitPolyData} class that defines a signed distance
 
 \subsection{vtkImplicitPolyData}
 
-The class \code{vtkImplicitPolyData} has several options that can be set. Use
+The class \code{vtkImplicitPolyData} operates on a \code{vtkPolyData} input. Use the method
+\begin{verbatim}
+void SetInput(vtkPolyData *input);
+\end{verbatim}
+to specify the \code{vtkPolyData} on which it should operate. The class also has several options that can be set. Use
 \begin{verbatim}
 void SetNoValue(double value);
 \end{verbatim}
@@ -152,7 +156,7 @@ to set the gradient returned when an error is encountered. Finally,
 \begin{verbatim}
 void SetTolerance(double tolerance);
 \end{verbatim}
-is used to determine when the absolute value of the signed distance is close enough to zero to be considered zero.
+use to determine when the absolute value of the signed distance is close enough to zero to be considered zero.
 
 \subsection{vtkPolyDataDistance}
 
@@ -166,13 +170,13 @@ void SignedDistanceOff();
 \end{verbatim}
 to turn computation of the signed distance on or off. By default, this option is on. If it is off, the unsigned distance function is computed.
 
-The methods
+Use the methods
 \begin{verbatim}
 void SetNegateDistance(int value);
 void NegateDistanceOn();
 void NegateDistanceOff();
 \end{verbatim}
-can be used to enable or disable negation of the signed distance field. If the \code{SignedDistance} option is off, then this option has no effect. \code{NegateDistance} option is off by default.
+to enable or disable negation of the signed distance field. If the \code{SignedDistance} option is off, then this option has no effect. \code{NegateDistance} option is off by default.
 
 The methods
 \begin{verbatim}
@@ -188,7 +192,7 @@ can be called to get the second output.
 
 \section{Boolean Operations on Surfaces Using Signed Distance}
 
-Boolean operations can be computed with only the signed distance field for each mesh. The sign of the distance field at a point in the mesh corresponds to whether that point is inside (negative), outside (positive), or on (zero) the other mesh; the surfaces bounding the volumes produced by the boolean operations described in Section \ref{sec:Introduction} can thus be defined as:
+Boolean operations can be computed with only the signed distance field for each mesh. The sign of the distance field at a point in the mesh corresponds to whether that point is inside (negative), outside (positive), or on (zero) the other mesh; the surfaces bounding the volumes produced by the boolean operations described in Section \ref{sec:Introduction} can therefore be defined as:
 
 \begin{description}
 
@@ -208,12 +212,12 @@ The difference is defined as the set of cells of $M_A$ whose points are a non-ne
 
 \section{Clipping One Surface Mesh with Another}
 
-While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, doing so would produce inaccurate results. \code{vtkClipPolyData} treats the implicit function as piecewise linear within each cell of the \code{vtkPolyData} being clipped. In general, implicit functions are not guaranteed to be piecewise linear in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seamlessly. Figure \ref{fig:DistanceZeroLevelVsIntersection} shows an example where the zero level of the distance field (black) does not match the surface intersection (white). 
+While it seems possible to use the class \code{vtkClipPolyData} together with \code{vtkImplicitPolyData} to extract the necessary portions of each input surface to produce the boolean surfaces, doing so would produce inaccurate results. \code{vtkClipPolyData} treats the implicit function as a single piecewise linear function within each cell of the \code{vtkPolyData} being clipped. In general, an implicit function is not guaranteed to be a single piecewise linear function in each cell, and the same is true for the signed distance field. The result is that clipped surfaces produced by \code{vtkClipPolyData} will not be clipped at the true zero level of the distance field. Consequently, the clipped portions of each input geometry will not match at the zero level where they should fuse seamlessly. Figure \ref{fig:DistanceZeroLevelVsIntersection} shows an example where the zero level of the distance field (black) does not match the surface intersection (white). 
 
-\begin{figure}[t]
+\begin{figure}[h]
 \centering
 \includegraphics[scale=0.25]{Figures/DistanceZeroLevelVsIntersection}
-\itkcaption{A case where the zero level of the distance field from the cylinder (black lines) does not match the intersection between the cone and the cylinder (white lines). Because of this mismatch, the class \code{vtkClipPolyData} is not suitable for accurate splitting of one surface mesh by another.}
+\itkcaption{A case where the zero level of the distance field from the cylinder (black lines) computed on the cone does not match the intersection between the cylinder and the cone (white lines). Because of this mismatch, the class \code{vtkClipPolyData} is not suitable for accurate splitting of one surface mesh by another without further mesh processing.}
 \label{fig:DistanceZeroLevelVsIntersection}
 \end{figure}
 
@@ -221,18 +225,18 @@ Instead of clipping the input meshes based on the signed distance evaluated at m
 
 \subsection{Identifying the Surface Intersection}
 
-Identifying the surface intersection between two surface meshes is the most complex part of the boolean operations algorithm. It involves identifying the intersection between each triangle in the first mesh with all triangles in the second mesh that intersect it. A triangle-triangle intersection test yields two endpoints (possibly the same) of the actual line segment defining the intersection when the triangles intersect. If the endpoints are the same, then the intersection line is degenerate, and it is not added to the set of intersection lines. The intersection between overlapping and co-planar triangles is more complicated; \code{vtkPolyDataIntersection} does not explicitly handle intersections between two coplanar triangles.
+Identifying the surface intersection between two surface meshes is the most complex part of the boolean operation algorithm. It involves identifying the intersection between each triangle in the first mesh with all triangles in the second mesh that intersect it. A triangle-triangle intersection test yields two endpoints (possibly the same) of the actual line segment defining the intersection when the triangles intersect. If the endpoints are the same, then the intersection line is degenerate, and it is not added to the set of intersection lines. The intersection between overlapping and co-planar triangles is more complicated; our work does not explicitly handle intersections between two coplanar triangles.
 
-Oriented bounding box (OBB) trees are used to accelerate the identification of triangle-triangle intersections between meshes. Two \code{vtkOBBTree} objects are instantiated, one for each input mesh. The method \code{vtkOBBTree::IntersectWithOBBTree()} is then called on one OBB tree with the second OBB tree and a callback function passed as parameters. The callback function performs more accurate triangle-triangle intersection tests between the triangles in overlapping nodes from the two OBB trees and stores the results in several data structures used later in the algorithm.
+Oriented bounding box (OBB) trees are used to accelerate the identification of triangle-triangle intersections between meshes. Two \code{vtkOBBTree} objects are instantiated, one for each input mesh. The method \code{vtkOBBTree::IntersectWithOBBTree()} is then called on one OBB tree with the second OBB tree and a callback function passed as parameters. The callback function performs a more accurate triangle-triangle intersection test between the triangles in overlapping nodes from the two OBB trees and stores the line defining the intersection and other information in several data structures used later in the algorithm.
 
-End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkPointLocator} object with a small tolerance, leading to many fewer connected components than if the line segments were stored as ``line soup''. Merging the end points also simplifies later operations. In addition, each end point is tested to see if it lies on each edge of the two input triangles. If so, a key-value pair is stored in a \code{std::multimap} where the key is the ID of the endpoint and the value is a 3-tuple consisting of the index of the triangle, the index of the triangle edge, and the index of the intersecting line.
+End points from the triangle-triangle intersections are stored in a \code{vtkPoints} object and the line cells are stored in a \code{vtkCellArray}. The points  are merged using a \code{vtkPointLocator} object with a small tolerance, leading to many fewer connected components than if the line segments were stored as ``line soup''. Merging the end points also simplifies later operations. In addition, each end point is tested to see if it lies on an edge of the two input triangles. If so, a key-value pair is stored in a \code{std::multimap} where the key is the ID of the endpoint and the value is a 3-tuple consisting of the index of the triangle, the index of the triangle edge, and the index of the intersecting line.
 
 The entries in the \code{std::multimap} described above are used to split the fully connected intersection lines to respect the topology of each input mesh. Because the end points of the intersection lines are merged during construction, they need to be split at locations where the mesh is split. For example, as shown in Figure \ref{fig:BoxVectors}, a mesh representing a cube often has duplicate points at the corners to store three different normals, one for each face incident to the point. These normals enable the appearance of sharp edges on the mesh. If the surface intersection on a cube splits an edge that connects two of these corners, then two points should be inserted at the split point rather than one to ensure that two face normals are defined at the split point.
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.25]{Figures/BoxNormals}
-\itkcaption{Splitting a mesh with duplicate normals. The box object has three duplicate points at each corner each of which has a different normal (gray arrows). The surface intersection between the box in the front (gray, solid) and the box in the back (white, outline) is shown in green. Points from the intersection lines that lie on the duplicate edges of the box are also duplicated by the mesh splitting procedure in \code{vtkPolyDataIntersection}. The normal at a duplicated point, along with other point data, is interpolated from the cell that contains the intersection line that references that point.}
+\itkcaption{Splitting a mesh with duplicate normals. The box object has three duplicate points at each corner each of which has a different normal (gray arrows). The surface intersection between the box in the front (gray, solid) and the box in the back (white, outline) is shown in green. Points from the intersection lines that lie on the duplicate edges of the box are also duplicated by the mesh splitting procedure. The normal at a duplicated point, along with other point data, is interpolated from the cell that contains the intersection line that references that point.}
 \label{fig:BoxNormals}
 \end{figure}
 
@@ -265,7 +269,7 @@ Splitting proceeds on a cell-by-cell basis. For each cell that needs splitting, 
 \item Points from neighboring cells that lie on a cell edge but which were not already added in 4 (orange sphere in Figure \ref{fig:CellSplitSetup}).
 \end{enumerate}
 
-\begin{figure}
+\begin{figure}[h]
 \centering
 \includegraphics[scale=0.25]{Figures/CellSplitSetup}
 \caption{The points and lines required for splitting a cell.}
@@ -278,7 +282,7 @@ The \code{vtkDelaunay2D} class can be used to determine a triangulation from the
 
 \subsection{vtkPolyDataIntersection}
 
-We have defined a new class \code{vtkPolyDataIntersection} that computes the surface intersection between two surface meshes and can optionally split the input meshes by the surface intersection. The surface meshes must consist of triangles. Two options are available for this filter:
+We have defined a new class \code{vtkPolyDataIntersection} that encapsulates the algorithm described above to compute the surface intersection between two surface meshes and optionally split the input meshes by the surface intersection. The surface meshes must consist of triangles. Two options are available for this filter:
 \begin{verbatim}
 void SetSplitFirstOutput(int value);
 void SplitFirstOutputOn();
@@ -292,17 +296,22 @@ These options specify whether the output meshes should be split. Each option is 
 
 \section{Putting it All Together}
 
-There are two ways to compute the surface mesh resulting from a boolean operation on two surface meshes: setting up a VTK pipeline or using a new class \code{vtkPolyDataBooleanOperationFilter}.
+There are two ways to use the classes we have developed to compute the surface mesh resulting from a boolean operation on two surface meshes: setting up a VTK pipeline or using a new class \code{vtkPolyDataBooleanOperationFilter}.
 
 \subsection{Setting up a VTK Pipeline for Boolean Operations on Surfaces}
 
-To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two instances of \code{vtkThreshold} are required to select different portions from each of the input geometries.
+To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two arrows between \code{vtkPolyDataIntersection} and \code{vtkPolyDataDistance} indicate that the two output surfaces from \code{vtkPolyDataIntersection} are set as the input to \code{vtkPolyDataDistance}. The two instances of \code{vtkThreshold} operate on different outputs of \code{vtkPolyDataDistance}.
 
-\begin{figure}[h]
+\begin{figure}[t]
 \begin{center}
+
+\code{vtkPolyData} \hspace{1em} \code{vtkPolyData}
+
+$\downarrow$ \hspace{3.2em} $\downarrow$
+
 \code{vtkPolyDataIntersection}
 
-$\downarrow$
+$\downarrow$ \hspace{3.2em} $\downarrow$
 
 \code{vtkPolyDataDistance}
 
@@ -310,15 +319,23 @@ $\swarrow$ \hspace{3em} $\searrow$
 
 \code{vtkThreshold} \hspace{1em} \code{vtkThreshold}
 
-$\searrow$ \hspace{3em} $\swarrow$
+$\downarrow$ \hspace{4em} $\downarrow$
 
-\code{vtkAppendFilter}
+\code{vtkDataSetSurface} \hspace{1em} \code{vtkDataSetSurface}
+
+$\downarrow$ \hspace{4em} $\downarrow$
+
+\hspace{5.5em} $\downarrow$ \hspace{2.6em} \code{vtkReverseSense}
+
+$\downarrow$ \hspace{4em} $\downarrow$
+
+\code{vtkAppendPolyDataFilter}
 
 $\downarrow$
 
 \code{vtkDataSetSurfaceFilter}
 \end{center}
-\itkcaption{Possible pipeline to be used to compute results of boolean operations on surface meshes.}
+\itkcaption{Possible pipeline for computing boolean operations on surface meshes. The instance of \code{vtkReverseSense} is optional and can be used when the boolean difference is desired to reorient the intersection portion of the second surface so that its normals face toward the outside of the resulting surface.}
 \label{fig:Pipeline}
 \end{figure}
 
@@ -345,7 +362,7 @@ Lastly, the \code{Tolerance} sets a threshold on the absolute value of a distanc
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
 
-%\input{ResultsFigure.tex}
+\input{ResultsFigure.tex}
 
 \section{Limitations}
 
