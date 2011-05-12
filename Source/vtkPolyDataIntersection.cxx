@@ -213,12 +213,10 @@ int vtkPolyDataIntersection::Impl
               continue;
               }
 
-            bool endPointsAreDistinct =
-              outpt0[0] != outpt1[0] ||
-              outpt0[1] != outpt1[1] ||
-              outpt0[2] != outpt1[2];
-
-            if ( intersects && endPointsAreDistinct )
+            if ( intersects &&
+                 ( outpt0[0] != outpt1[0] ||
+                   outpt0[1] != outpt1[1] ||
+                   outpt0[2] != outpt1[2] ) )
               {
               vtkIdType lineId = intersectionLines->GetNumberOfCells();
               intersectionLines->InsertNextCell(2);
@@ -958,7 +956,7 @@ int vtkPolyDataIntersection
   coplanar = 0;
 
   // There are more efficient ways to find the intersection line (if
-  // it exists), but this is clearer.
+  // it exists), but this is clear enough.
   double *pts1[3] = {p1, q1, r1}, *pts2[3] = {p2, q2, r2};
 
   // Find line of intersection (L = p + t*v) between two planes.
@@ -989,6 +987,20 @@ int vtkPolyDataIntersection
       {
       t2[index2++] = vtkMath::Dot(x, v) - vtkMath::Dot(p, v);
       }
+    }
+
+  // Check if only one edge or all edges intersect the supporting
+  // planes intersection.
+  if ( index1 != 2 || index2 != 2 )
+    {
+    return 0;
+    }
+
+  // Check for NaNs
+  if ( vtkMath::IsNan( t1[0] ) || vtkMath::IsNan( t1[1] ) ||
+       vtkMath::IsNan( t2[0] ) || vtkMath::IsNan( t2[1] ) )
+    {
+    return 0;
     }
 
   if ( t1[0] > t1[1] ) std::swap( t1[0], t1[1] );
