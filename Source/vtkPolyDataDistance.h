@@ -1,26 +1,38 @@
 /*=========================================================================
 
-  Written by: Chris Weigle, University of North Carolina at Chapel Hill
-  Email Contact: weigle@cs.unc.edu
+  Program:   Visualization Toolkit
+  Module:    vtkPolyDataDistance.h
 
-  IN NO EVENT SHALL THE UNIVERSITY OF NORTH CAROLINA AT CHAPEL HILL BE
-  LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR
-  CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF THE USE
-  OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF NORTH
-  CAROLINA HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
+  All rights reserved.
+  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
 
-  THE UNIVERSITY OF NORTH CAROLINA SPECIFICALLY DISCLAIM ANY WARRANTIES,
-  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-  AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
-  ON AN "AS IS" BASIS, AND THE UNIVERSITY OF NORTH CAROLINA HAS NO
-  OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-  MODIFICATIONS.
+     This software is distributed WITHOUT ANY WARRANTY; without even
+     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+     PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
+// .NAME vtkPolyDataDistance
+// .SECTION Description
+//
+// Computes the signed distance from one vtkPolyData to another. The
+// signed distance to the second input is computed at every point in
+// the first input using vtkImplicitPolyData. Optionally, the signed
+// distance to the first input at every point in the second input can
+// be computed. This may be enabled by calling
+// ComputeSecondDistanceOn().
+//
+// If the signed distance is not desired, the unsigned distance can be
+// computed by calling SignedDistanceOff(). The signed distance field
+// may be negated by calling NegateDistanceOn();
+//
+// Written by Chris Weigle and Cory Quammen, The University of North
+// Carolina at Chapel Hill.
+
 #ifndef __vtkPolyDataDistance_h
 #define __vtkPolyDataDistance_h
 
-#include <vtkPolyDataAlgorithm.h>
+#include "vtkPolyDataAlgorithm.h"
 
 class vtkPolyDataDistance : public vtkPolyDataAlgorithm {
 public:
@@ -30,20 +42,21 @@ public:
 
   // Description:
   // Enable/disable computation of the signed distance between
-  // the first poly data and the second poly data.
+  // the first poly data and the second poly data. Defaults to on.
   vtkSetMacro(SignedDistance,int);
   vtkGetMacro(SignedDistance,int);
   vtkBooleanMacro(SignedDistance,int);
 
   // Description:
-  // Enable/disable negation of the distance values.
+  // Enable/disable negation of the distance values. Defaults to
+  // off. Has no effect if SignedDistance is off.
   vtkSetMacro(NegateDistance,int);
   vtkGetMacro(NegateDistance,int);
   vtkBooleanMacro(NegateDistance,int);
 
   // Description:
   // Enable/disable computation of a second output poly data with the
-  // distance from the first poly data at each point.
+  // distance from the first poly data at each point. Defaults to on.
   vtkSetMacro(ComputeSecondDistance,int);
   vtkGetMacro(ComputeSecondDistance,int);
   vtkBooleanMacro(ComputeSecondDistance,int);

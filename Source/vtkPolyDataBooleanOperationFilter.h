@@ -17,17 +17,21 @@
 //
 // Computes the boundary of the union, intersection, or difference
 // volume computed from the volumes defined by two input surfaces. The
-// two surfaces do not need to be manifold. The resulting surface is
+// two surfaces do not need to be manifold, but if they are not,
+// unexpected results may be obtained. The resulting surface is
 // available in the first output of the filter. The second output
 // contains a set of polylines that represent the intersection between
 // the two input surfaces.
+//
+// Written by Chris Weigle and Cory Quammen, The University of North
+// Carolina at Chapel Hill.
 
 #ifndef __vtkPolyDataBooleanOperationFilter_h
 #define __vtkPolyDataBooleanOperationFilter_h
 
-#include <vtkPolyDataAlgorithm.h>
+#include "vtkPolyDataAlgorithm.h"
 
-#include <vtkDataSetAttributes.h> // Needed for CopyCells() method
+#include "vtkDataSetAttributes.h" // Needed for CopyCells() method
 
 class vtkIdList;
 class vtkPolyDataDistance;
@@ -53,6 +57,8 @@ public:
     DIFFERENCE
   };
 
+  // Description:
+  // Set the boolean operation to perform. Defaults to union.
   vtkSetClampMacro( Operation, int, UNION, DIFFERENCE );
   vtkGetMacro( Operation, int );
   void SetOperationToUnion()
@@ -64,14 +70,14 @@ public:
 
   // Description:
   // Turn on/off cell reorientation of the intersection portion of the
-  // surface when the operation is set to DIFFERENCE.
+  // surface when the operation is set to DIFFERENCE. Defaults to on.
   vtkSetMacro( ReorientDifferenceCells, int );
   vtkGetMacro( ReorientDifferenceCells, int );
   vtkBooleanMacro( ReorientDifferenceCells, int );
 
   // Description:
   // Set/get the tolerance used to determine when a point's absolute
-  // distance is considered to be zero.
+  // distance is considered to be zero. Defaults to 1e-6.
   vtkSetMacro(Tolerance, double);
   vtkGetMacro(Tolerance, double);
 

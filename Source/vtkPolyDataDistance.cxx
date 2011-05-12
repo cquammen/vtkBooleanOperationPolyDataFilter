@@ -1,38 +1,31 @@
 /*=========================================================================
 
-  Written by: Chris Weigle, University of North Carolina at Chapel Hill
-  Email Contact: weigle@cs.unc.edu
+  Program:   Visualization Toolkit
+  Module:    vtkPolyDataDistance.cxx
 
-  IN NO EVENT SHALL THE UNIVERSITY OF NORTH CAROLINA AT CHAPEL HILL BE
-  LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR
-  CONSEQUENTIAL DAMAGES, INCLUDING LOST PROFITS, ARISING OUT OF THE USE
-  OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF THE UNIVERSITY OF NORTH
-  CAROLINA HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+  Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
+  All rights reserved.
+  See Copyright.txt or http://www.kitware.com/Copyright.htm for details.
 
-  THE UNIVERSITY OF NORTH CAROLINA SPECIFICALLY DISCLAIM ANY WARRANTIES,
-  INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
-  AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
-  ON AN "AS IS" BASIS, AND THE UNIVERSITY OF NORTH CAROLINA HAS NO
-  OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR
-  MODIFICATIONS.
+     This software is distributed WITHOUT ANY WARRANTY; without even
+     the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+     PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
 #include "vtkPolyDataDistance.h"
 
-#include <vtkInformation.h>
-#include <vtkInformationVector.h>
-#include <vtkObjectFactory.h>
-#include <vtkStreamingDemandDrivenPipeline.h>
-
-#include <vtkPointData.h>
-#include <vtkCellData.h>
-#include <vtkPolyData.h>
-#include <vtkPolygon.h>
-#include <vtkTriangle.h>
-#include <vtkDoubleArray.h>
-#include <vtkFieldData.h>
-
+#include "vtkCellData.h"
+#include "vtkDoubleArray.h"
+#include "vtkFieldData.h"
 #include "vtkImplicitPolyData.h"
+#include "vtkInformation.h"
+#include "vtkInformationVector.h"
+#include "vtkObjectFactory.h"
+#include "vtkPointData.h"
+#include "vtkPolyData.h"
+#include "vtkPolygon.h"
+#include "vtkStreamingDemandDrivenPipeline.h"
+#include "vtkTriangle.h"
 
 vtkCxxRevisionMacro(vtkPolyDataDistance, "$Revision: 1.1 $");
 vtkStandardNewMacro(vtkPolyDataDistance);

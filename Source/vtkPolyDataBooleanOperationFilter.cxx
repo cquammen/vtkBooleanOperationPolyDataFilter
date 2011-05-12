@@ -38,7 +38,7 @@ vtkCxxRevisionMacro(vtkPolyDataBooleanOperationFilter, "$Revision: 1.1 $");
 vtkStandardNewMacro(vtkPolyDataBooleanOperationFilter);
 
 //-----------------------------------------------------------------------------
-vtkPolyDataBooleanOperationFilter::vtkPolyDataBooleanOperationFilter() : 
+vtkPolyDataBooleanOperationFilter::vtkPolyDataBooleanOperationFilter() :
   vtkPolyDataAlgorithm()
 {
   this->Tolerance = 1e-6;
@@ -129,14 +129,14 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
     return 0;
     }
 
-  vtkPolyData* input0 = 
+  vtkPolyData* input0 =
     vtkPolyData::SafeDownCast(inInfo0->Get(vtkDataObject::DATA_OBJECT()));
-  vtkPolyData* input1 = 
+  vtkPolyData* input1 =
     vtkPolyData::SafeDownCast(inInfo1->Get(vtkDataObject::DATA_OBJECT()));
 
-  vtkPolyData* outputSurface = 
+  vtkPolyData* outputSurface =
     vtkPolyData::SafeDownCast(outInfo0->Get(vtkDataObject::DATA_OBJECT()));
-  vtkPolyData* outputIntersection = 
+  vtkPolyData* outputIntersection =
     vtkPolyData::SafeDownCast(outInfo1->Get(vtkDataObject::DATA_OBJECT()));
 
   if (!input0 || !input1 || !outputSurface || !outputIntersection)
@@ -232,7 +232,7 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
   else if ( this->Operation == INTERSECTION || this->Operation == DIFFERENCE )
     {
     this->CopyCells(pd1, outputSurface, 1, pointFields, cellFields, interList,
-                    (this->ReorientDifferenceCells == 1 && 
+                    (this->ReorientDifferenceCells == 1 &&
                      this->Operation == DIFFERENCE));
     }
 

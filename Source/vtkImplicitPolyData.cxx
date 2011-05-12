@@ -29,11 +29,6 @@
 #include "vtkPolygon.h"
 #include "vtkTriangleFilter.h"
 
-// Historical note: why is this class named so? I started with
-// vtkImplicitPolyData from David.Pont@ForestResearch.co.nz, but
-// slowly changed the class to the current version, which uses a
-// different approach. It should probably be renamed ...
-
 vtkCxxRevisionMacro(vtkImplicitPolyData, "$Revision: 1.1 $");
 vtkStandardNewMacro(vtkImplicitPolyData);
 

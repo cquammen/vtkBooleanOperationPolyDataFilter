@@ -18,9 +18,15 @@
 // Implicit function that computes the distance from a point x to the
 // nearest point p on an input vtkPolyData. The sign of the function
 // is set to the sign of the dot product between the angle-weighted
-// pseudo-normal at the nearest surface point and the vector x -
-// p. The gradient of the function is the angle-weighted pseudo-normal
-// at the neared point.
+// pseudonormal at the nearest surface point and the vector x - p.
+// Points interior to the geometry have a negative distance, points on
+// the exterior have a positive distance, and points on the input
+// vtkPolyData have a distance of zero. The gradient of the function
+// is the angle-weighted pseudonormal at the nearest point.
+//
+// Baerentzen, J. A. and Aanaes, H. (2005). Signed distance
+// computation using the angle weighted pseudonormal. IEEE
+// Transactions on Visualization and Computer Graphics, 11:243-253.
 //
 // Written by Chris Weigle and Cory Quammen, The University of North
 // Carolina at Chapel Hill.
