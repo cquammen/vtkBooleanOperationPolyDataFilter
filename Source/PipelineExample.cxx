@@ -1,6 +1,7 @@
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
 #include <vtkDataSetSurfaceFilter.h>
+#include <vtkPolyDataBooleanOperationFilter.h>
 #include <vtkPolyDataDistance.h>
 #include <vtkPolyDataIntersection.h>
 #include <vtkPolyDataMapper.h>
@@ -35,18 +36,18 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
   vtkThreshold *thresh2 = vtkThreshold::New();
   thresh2->SetInputConnection( distance->GetOutputPort( 1 ) );
 
-  if ( operation == 0 ) // Union
+  if ( operation == vtkPolyDataBooleanOperationFilter::UNION )
     {
     thresh1->ThresholdByUpper( 0.0 );
     thresh2->ThresholdByUpper( 0.0 );
     }
-  else if ( operation == 1 ) // Intersection
-    {  
+  else if ( operation == vtkPolyDataBooleanOperationFilter::INTERSECTION )
+    {
     thresh1->ThresholdByLower( 0.0 );
     thresh2->ThresholdByLower( 0.0 );
     }
-  else
-    { // Difference
+  else // Difference
+    {
     thresh1->ThresholdByUpper( 0.0 );
     thresh2->ThresholdByLower( 0.0 );
     }
@@ -101,12 +102,12 @@ int main(int argc, char* argv[])
   vtkRenderWindowInteractor * renWinInteractor = vtkRenderWindowInteractor::New();
   renWinInteractor->SetRenderWindow( renWin );
 
-  vtkActor *unionActor = 
-    GetBooleanOperationActor( -2.0, 0 );
+  vtkActor *unionActor =
+    GetBooleanOperationActor( -2.0, vtkPolyDataBooleanOperationFilter::UNION );
   vtkActor *intersectionActor =
-    GetBooleanOperationActor(  0.0, 1 );
+    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
   vtkActor *differenceActor =
-    GetBooleanOperationActor(  2.0, 2 );
+    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
 
   renderer->AddActor( unionActor );
   unionActor->Delete();
