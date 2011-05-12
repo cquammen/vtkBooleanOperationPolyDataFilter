@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
   vtkRenderWindowInteractor * renWinInteractor = vtkRenderWindowInteractor::New();
   renWinInteractor->SetRenderWindow( renWin );
 
-  vtkActor *unionActor = 
+  vtkActor *unionActor =
     GetBooleanOperationActor( -2.0, vtkPolyDataBooleanOperationFilter::UNION );
   vtkActor *intersectionActor =
     GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
