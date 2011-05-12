@@ -35,7 +35,6 @@ ENDFOREACH(Package)
 SET(Libraries
   vtkFiltering
   vtkGraphics
-#  vtkImaging
   vtkIO
   vtkRendering
 )
@@ -45,13 +44,24 @@ SET(Libraries
 #MyExe will be built using the files MyClass.h and MyClass.cxx, and it will
 #be linked to all the libraries you specified above.
 #You can build more than one executable per project
-SET(CurrentExe "PolyDataBooleanOperationFilterExample")
-ADD_EXECUTABLE(${CurrentExe}
+SET( ADDITIONAL_VTK_FILES
   vtkImplicitPolyData.cxx
   vtkPolyDataIntersection.cxx
   vtkPolyDataDistance.cxx
+)
+
+SET(CurrentExe "PolyDataBooleanOperationFilterExample")
+ADD_EXECUTABLE(${CurrentExe}
+  ${ADDITIONAL_VTK_FILES}
   vtkPolyDataBooleanOperationFilter.cxx
   PolyDataBooleanOperationFilterExample.cxx
+)
+TARGET_LINK_LIBRARIES(${CurrentExe} ${Libraries})
+
+SET(CurrentExe "PipelineExample")
+ADD_EXECUTABLE(${CurrentExe}
+  ${ADDITIONAL_VTK_FILES}
+  PipelineExample.cxx
 )
 TARGET_LINK_LIBRARIES(${CurrentExe} ${Libraries})
 
@@ -63,4 +73,4 @@ INCLUDE_DIRECTORIES( ${CMAKE_CURRENT_SOURCE_DIR} )
 #project or an external executable.  After that list any args that are needed
 #for this test.  Include as many tests as you like.  If your project doesn't have
 #any tests you can comment out or delete the following line.
-#ADD_TEST(TestPartialVolumeModeller ${CurrentExe})
+ADD_TEST(TestPartialVolumeModeller ${CurrentExe})
