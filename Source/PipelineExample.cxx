@@ -31,9 +31,15 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
   distance->SetInputConnection( 1, intersection->GetOutputPort( 2 ) );
 
   vtkThreshold *thresh1 = vtkThreshold::New();
+  thresh1->AllScalarsOn();
+  thresh1->SetInputArrayToProcess
+    ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "Distance" );
   thresh1->SetInputConnection( distance->GetOutputPort( 0 ) );
 
   vtkThreshold *thresh2 = vtkThreshold::New();
+  thresh2->AllScalarsOn();
+  thresh2->SetInputArrayToProcess
+    ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "Distance" );
   thresh2->SetInputConnection( distance->GetOutputPort( 1 ) );
 
   if ( operation == vtkPolyDataBooleanOperationFilter::UNION )
