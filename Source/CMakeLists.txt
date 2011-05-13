@@ -73,4 +73,4 @@ INCLUDE_DIRECTORIES( ${CMAKE_CURRENT_SOURCE_DIR} )
 #project or an external executable.  After that list any args that are needed
 #for this test.  Include as many tests as you like.  If your project doesn't have
 #any tests you can comment out or delete the following line.
-ADD_TEST(TestPartialVolumeModeller ${CurrentExe})
+#ADD_TEST(PolyDataBooleanOperationFilter ${CurrentExe})
