@@ -45,7 +45,7 @@ class vtkImplicitPolyData : public vtkImplicitFunction
 {
 public:
   static vtkImplicitPolyData *New();
-  vtkTypeRevisionMacro(vtkImplicitPolyData,vtkImplicitFunction);
+  vtkTypeMacro(vtkImplicitPolyData,vtkImplicitFunction);
   void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:

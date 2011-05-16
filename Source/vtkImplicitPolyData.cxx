@@ -29,7 +29,6 @@
 #include "vtkPolygon.h"
 #include "vtkTriangleFilter.h"
 
-vtkCxxRevisionMacro(vtkImplicitPolyData, "$Revision: 1.1 $");
 vtkStandardNewMacro(vtkImplicitPolyData);
 
 //-----------------------------------------------------------------------------
