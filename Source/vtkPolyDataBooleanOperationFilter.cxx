@@ -144,8 +144,10 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
     }
 
   // Get intersected versions
-  this->PolyDataIntersection->SetInput(0, input0);
-  this->PolyDataIntersection->SetInput(1, input1);
+  this->PolyDataIntersection->SetInputConnection
+    (0, this->GetInputConnection(0, 0));
+  this->PolyDataIntersection->SetInputConnection
+    (1, this->GetInputConnection(1, 0));
   this->PolyDataIntersection->SplitFirstOutputOn();
   this->PolyDataIntersection->SplitSecondOutputOn();
   this->PolyDataIntersection->Update();
@@ -155,8 +157,10 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
   outputIntersection->GetCellData()->PassData(this->PolyDataIntersection->GetOutput()->GetCellData());
 
   // Compute distances
-  this->PolyDataDistance->SetInput(0, this->PolyDataIntersection->GetOutput(1));
-  this->PolyDataDistance->SetInput(1, this->PolyDataIntersection->GetOutput(2));
+  this->PolyDataDistance->SetInputConnection
+    (0, this->PolyDataIntersection->GetOutputPort( 1 ));
+  this->PolyDataDistance->SetInputConnection
+    (1, this->PolyDataIntersection->GetOutputPort( 2 ));
   this->PolyDataDistance->ComputeSecondDistanceOn();
   this->PolyDataDistance->Update();
 
