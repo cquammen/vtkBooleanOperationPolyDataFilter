@@ -28,6 +28,7 @@
 #include "vtkPlane.h"
 #include "vtkPointData.h"
 #include "vtkPointLocator.h"
+#include "vtkSmartPointer.h"
 #include "vtkSortDataArray.h"
 #include "vtkTransform.h"
 #include "vtkTriangle.h"
@@ -269,7 +270,6 @@ int vtkPolyDataIntersection::Impl
 {
   vtkPolyData *input = this->Mesh[inputIndex];
   IntersectionMapType *intersectionMap = this->IntersectionMap[inputIndex];
-  vtkCellArray *cells, *newCells;
   vtkPoints *inPts = input->GetPoints();
   vtkCellData *inCD  = input->GetCellData();
   vtkCellData *outCD = output->GetCellData();
@@ -281,10 +281,9 @@ int vtkPolyDataIntersection::Impl
   // Process points
   ///////////////////////////////////////////////////////////////////////////
   vtkIdType numPoints = input->GetPoints()->GetNumberOfPoints();
-  vtkPoints *points = vtkPoints::New();
+  vtkSmartPointer< vtkPoints > points = vtkSmartPointer< vtkPoints >::New();
   points->Allocate(100);
   output->SetPoints(points);
-  points->Delete();
 
   ///////////////////////////////////////////////////////////////////////////
   // Split intersection lines. The lines structure is constructed
@@ -292,7 +291,8 @@ int vtkPolyDataIntersection::Impl
   // on a cell edge that has no neighbor. We need to duplicate a line
   // point in such a case and update the point ID in the line cell.
   ///////////////////////////////////////////////////////////////////////////
-  vtkPolyData *splitLines = vtkPolyData::New();
+  vtkSmartPointer< vtkPolyData > splitLines =
+    vtkSmartPointer <vtkPolyData >::New();
   splitLines->DeepCopy(intersectionLines);
   this->SplitIntersectionLines( inputIndex, input, splitLines );
 
@@ -335,30 +335,29 @@ int vtkPolyDataIntersection::Impl
   ///////////////////////////////////////////////////////////////////////////
   outCD->CopyAllocate(inCD, numCells);
 
-  vtkCellArray *newPolys = NULL;
   if ( input->GetPolys()->GetNumberOfCells() > 0 )
     {
-    cells = input->GetPolys();
+    vtkCellArray *cells = input->GetPolys();
     newId = output->GetNumberOfCells();
 
-    newPolys = vtkCellArray::New();
+    vtkSmartPointer< vtkCellArray > newPolys =
+      vtkSmartPointer< vtkCellArray >::New();
+
     newPolys->EstimateSize(cells->GetNumberOfCells(),3);
     output->SetPolys(newPolys);
-    newPolys->Delete();
 
-    vtkIdList *ptIds = vtkIdList::New();
-    ptIds->Allocate(VTK_CELL_SIZE);
-
-    vtkIdList *edgeNeighbors = vtkIdList::New();
+    vtkSmartPointer< vtkIdList > edgeNeighbors =
+      vtkSmartPointer< vtkIdList >::New();
     vtkIdType npts = 0;
     vtkIdType *pts = 0;
-    vtkIdList *cellsToCheck = vtkIdList::New();
+    vtkSmartPointer< vtkIdList > cellsToCheck =
+      vtkSmartPointer< vtkIdList >::New();
     for (cells->InitTraversal(); cells->GetNextCell(npts, pts); cellId++)
       {
       if ( npts != 3 )
         {
-        std::cerr << "vtkPolyDataIntersection only works with triangles"
-                  << std::endl;
+        vtkGenericWarningMacro( << "vtkPolyDataIntersection only works with "
+                                << "triangle meshes." );
         continue;
         }
 
@@ -387,8 +386,8 @@ int vtkPolyDataIntersection::Impl
             {
             needsSplit = true;
             }
-          }
-        }
+          } // for (vtkIdType nbr = 0; ...
+        } // for (vtkIdType pt = 0; ...
 
       // Splitting occurs here
       if ( !needsSplit )
@@ -436,12 +435,9 @@ int vtkPolyDataIntersection::Impl
 
           outCD->CopyData(inCD, cellId, newId); // Duplicate cell data
           }
-
         splitCells->Delete();
         }
-      }
-
-    edgeNeighbors->Delete();
+      } // for (cells->InitTraversal(); ...
     }
 
   return 1;
@@ -454,8 +450,9 @@ vtkCellArray* vtkPolyDataIntersection::Impl
             IntersectionMapType *map, vtkPolyData *interLines)
 {
   // Gather points from the cell
-  vtkPoints *points = vtkPoints::New();
-  vtkPointLocator *merger = vtkPointLocator::New();
+  vtkSmartPointer< vtkPoints > points = vtkSmartPointer< vtkPoints >::New();
+  vtkSmartPointer< vtkPointLocator > merger =
+    vtkSmartPointer< vtkPointLocator >::New();
   merger->SetTolerance( 1e-9 );
   merger->InitPointInsertion( points, input->GetBounds() );
 
@@ -469,7 +466,8 @@ vtkCellArray* vtkPolyDataIntersection::Impl
     }
 
   // Set up line cells.
-  vtkCellArray *lines = vtkCellArray::New();
+  vtkSmartPointer< vtkCellArray > lines =
+    vtkSmartPointer< vtkCellArray >::New();
 
   double p0[3], p1[3], p2[3];
   input->GetPoint(cellPts[0], p0);
@@ -510,7 +508,8 @@ vtkCellArray* vtkPolyDataIntersection::Impl
     }
 
   // Now check the neighbors of the cell
-  vtkIdList *nbrCellIds = vtkIdList::New();
+  vtkSmartPointer< vtkIdList > nbrCellIds =
+    vtkSmartPointer< vtkIdList >::New();
   for (vtkIdType i = 0; i < 3; i++)
     {
     vtkIdType edgePtId0 = cellPts[i];
@@ -561,7 +560,6 @@ vtkCellArray* vtkPolyDataIntersection::Impl
         }
       }
     }
-  nbrCellIds->Delete();
 
   // Set up reverse ID map
   std::map< vtkIdType, vtkIdType > reverseIdMap;
@@ -588,9 +586,11 @@ vtkCellArray* vtkPolyDataIntersection::Impl
   vtkMath::Perpendiculars( n, v0, v1, 0.0 );
 
   // For each point on an edge, compute it's relative angle about n.
-  vtkIdTypeArray *edgePtIdList = vtkIdTypeArray::New();
+  vtkSmartPointer< vtkIdTypeArray > edgePtIdList =
+    vtkSmartPointer< vtkIdTypeArray >::New();
   edgePtIdList->Allocate( points->GetNumberOfPoints() );
-  vtkDoubleArray *angleList = vtkDoubleArray::New();
+  vtkSmartPointer< vtkDoubleArray > angleList =
+    vtkSmartPointer< vtkDoubleArray >::New();
   angleList->Allocate( points->GetNumberOfPoints() );
 
   for ( vtkIdType ptId = 0; ptId < points->GetNumberOfPoints(); ptId++ )
@@ -636,13 +636,14 @@ vtkCellArray* vtkPolyDataIntersection::Impl
   ///////////////////////////////////////////////////////////////////////////
   // Set up vtkPolyData to feed to vtkDelaunay2D
   ///////////////////////////////////////////////////////////////////////////
-  vtkPolyData *pd = vtkPolyData::New();
+  vtkSmartPointer< vtkPolyData > pd = vtkSmartPointer< vtkPolyData >::New();
   pd->SetPoints( points );
   pd->SetLines( lines );
 
   // Set up a transform that will rotate the points to the
   // XY-plane (normal aligned with z-axis).
-  vtkTransform* transform = vtkTransform::New();
+  vtkSmartPointer< vtkTransform > transform =
+    vtkSmartPointer< vtkTransform >::New();
   double zaxis[3] = {0, 0, 1};
   double rotationAxis[3], normal[3], center[3], rotationAngle;
 
@@ -690,7 +691,8 @@ vtkCellArray* vtkPolyDataIntersection::Impl
   vtkTriangle::TriangleCenter(pt0, pt1, pt2, center);
   transform->Translate(-center[0], -center[1], -center[2]);
 
-  vtkDelaunay2D* del2D = vtkDelaunay2D::New();
+  vtkSmartPointer< vtkDelaunay2D > del2D =
+    vtkSmartPointer< vtkDelaunay2D >::New();
   del2D->SetInput(pd);
   del2D->SetSource(pd);
   del2D->SetTolerance(0.0);
@@ -698,7 +700,6 @@ vtkCellArray* vtkPolyDataIntersection::Impl
   del2D->SetOffset(10);
   del2D->SetProjectionPlaneMode(VTK_SET_TRANSFORM_PLANE);
   del2D->SetTransform(transform);
-  transform->Delete();
   del2D->BoundingTriangulationOff();
   del2D->Update();
 
@@ -737,11 +738,6 @@ vtkCellArray* vtkPolyDataIntersection::Impl
         }
       }
     }
-
-  del2D->Delete();
-
-  points->Delete();
-  merger->Delete();
 
   return splitCells;
 }
@@ -843,7 +839,8 @@ void vtkPolyDataIntersection::Impl
 
       // Find all cells that share this edge. We need just one point
       // for all connected edges.
-      vtkIdList *nbrCellIds = vtkIdList::New();
+      vtkSmartPointer< vtkIdList > nbrCellIds =
+        vtkSmartPointer< vtkIdList >::New();
       sourceMesh->GetCellEdgeNeighbors( cellId, edgePtIds[0], edgePtIds[1],
                                    nbrCellIds );
 
@@ -1070,9 +1067,9 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
 
   vtkPolyData *outputIntersection = vtkPolyData::SafeDownCast(
     outIntersectionInfo->Get(vtkDataObject::DATA_OBJECT()));
-  vtkPoints* outputIntersectionPoints = vtkPoints::New();
+  vtkSmartPointer< vtkPoints > outputIntersectionPoints =
+    vtkSmartPointer< vtkPoints >::New();
   outputIntersection->SetPoints(outputIntersectionPoints);
-  outputIntersectionPoints->Delete();
 
   vtkPolyData *outputPolyData0 = vtkPolyData::SafeDownCast(
     outPolyDataInfo0->Get(vtkDataObject::DATA_OBJECT()));
@@ -1081,16 +1078,16 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
     outPolyDataInfo1->Get(vtkDataObject::DATA_OBJECT()));
 
   // Set up new poly data for the inputs to build cells and links.
-  vtkPolyData *mesh0 = vtkPolyData::New();
+  vtkSmartPointer< vtkPolyData > mesh0 = vtkSmartPointer< vtkPolyData >::New();
   mesh0->DeepCopy(input0);
   mesh0->SetSource(NULL);
 
-  vtkPolyData *mesh1 = vtkPolyData::New();
+  vtkSmartPointer< vtkPolyData > mesh1 = vtkSmartPointer< vtkPolyData >::New();
   mesh1->DeepCopy(input1);
   mesh1->SetSource(NULL);
 
   // Find the triangle-triangle intersections between mesh0 and mesh1
-  vtkOBBTree *obbTree0 = vtkOBBTree::New();
+  vtkSmartPointer< vtkOBBTree > obbTree0 = vtkSmartPointer< vtkOBBTree >::New();
   obbTree0->SetDataSet(mesh0);
   obbTree0->SetNumberOfCellsPerNode(10);
   obbTree0->SetMaxLevel(1e6);
@@ -1098,7 +1095,7 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
   obbTree0->AutomaticOn();
   obbTree0->BuildLocator();
 
-  vtkOBBTree *obbTree1 = vtkOBBTree::New();
+  vtkSmartPointer< vtkOBBTree > obbTree1 = vtkSmartPointer< vtkOBBTree >::New();
   obbTree1->SetDataSet(mesh1);
   obbTree1->SetNumberOfCellsPerNode(10);
   obbTree1->SetMaxLevel(1e6);
@@ -1113,10 +1110,9 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
   impl->Mesh[1]  = mesh1;
   impl->OBBTree1 = obbTree1;
 
-  vtkCellArray *lines = vtkCellArray::New();
+  vtkSmartPointer< vtkCellArray > lines = vtkSmartPointer< vtkCellArray >::New();
   outputIntersection->SetLines(lines);
   impl->IntersectionLines = lines;
-  lines->Delete();
 
   // Add cell data arrays that map the intersection line to the cells
   // it splits.
@@ -1145,7 +1141,8 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
     if (bounds1[maxIdx] > bounds0[maxIdx]) bounds0[maxIdx] = bounds1[maxIdx];
     }
 
-  vtkPointLocator *pointMerger = vtkPointLocator::New();
+  vtkSmartPointer< vtkPointLocator > pointMerger =
+    vtkSmartPointer< vtkPointLocator >::New();
   pointMerger->SetTolerance(1e-6);
   pointMerger->InitPointInsertion(outputIntersection->GetPoints(), bounds0);
   impl->PointMerger = pointMerger;
@@ -1154,10 +1151,6 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
   obbTree0->IntersectWithOBBTree
     (obbTree1, 0, vtkPolyDataIntersection::Impl::FindTriangleIntersections,
      impl);
-
-  obbTree0->Delete();
-  obbTree1->Delete();
-  pointMerger->Delete();
 
   // Split the first output if so desired
   if ( this->SplitFirstOutput )
