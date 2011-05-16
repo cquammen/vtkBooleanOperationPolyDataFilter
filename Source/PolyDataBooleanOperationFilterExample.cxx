@@ -4,32 +4,40 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
+#include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
+
+#include <vtkImplicitPolyData.h>
+#include <vtkPolyDataDistance.h>
+#include <vtkPolyDataBooleanOperationFilter.h>
+
+#include <vtkPolyDataIntersection.h>
+
+#define vtkNewSmartPointer( classname, var ) \
+  vtkSmartPointer<classname> var = vtkSmartPointer<classname>::New();
+
 
 vtkActor* GetBooleanOperationActor( double x, int operation )
 {
   double centerSeparation = 0.15;
-  vtkSphereSource *sphere1 = vtkSphereSource::New();
+  vtkNewSmartPointer(vtkSphereSource, sphere1);
   sphere1->SetCenter(-centerSeparation + x, 0.0, 0.0);
 
-  vtkSphereSource *sphere2 = vtkSphereSource::New();
+  vtkNewSmartPointer(vtkSphereSource, sphere2);
   sphere2->SetCenter(  centerSeparation + x, 0.0, 0.0);
 
-  vtkPolyDataBooleanOperationFilter *boolFilter =
-    vtkPolyDataBooleanOperationFilter::New();
+  vtkNewSmartPointer(vtkPolyDataBooleanOperationFilter, boolFilter);
   boolFilter->SetOperation( operation );
   boolFilter->SetInputConnection( 0, sphere1->GetOutputPort() );
-  sphere1->Delete();
   boolFilter->SetInputConnection( 1, sphere2->GetOutputPort() );
-  sphere2->Delete();
+  boolFilter->Update();
 
-  vtkPolyDataMapper *mapper = vtkPolyDataMapper::New();
+  vtkNewSmartPointer(vtkPolyDataMapper, mapper);
   mapper->SetInputConnection( boolFilter->GetOutputPort() );
   mapper->ScalarVisibilityOff();
 
   vtkActor *actor = vtkActor::New();
   actor->SetMapper( mapper );
-  mapper->Delete();
 
   return actor;
 }
@@ -37,33 +45,30 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
 
 int main(int argc, char* argv[])
 {
-  vtkRenderer *renderer = vtkRenderer::New();
-
-  vtkRenderWindow *renWin = vtkRenderWindow::New();
+  vtkNewSmartPointer(vtkRenderer, renderer);
+  vtkNewSmartPointer(vtkRenderWindow, renWin);
   renWin->AddRenderer( renderer );
 
-  vtkRenderWindowInteractor * renWinInteractor = vtkRenderWindowInteractor::New();
+  vtkNewSmartPointer(vtkRenderWindowInteractor, renWinInteractor);
   renWinInteractor->SetRenderWindow( renWin );
 
   vtkActor *unionActor =
     GetBooleanOperationActor( -2.0, vtkPolyDataBooleanOperationFilter::UNION );
-  vtkActor *intersectionActor =
-    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
-  vtkActor *differenceActor =
-    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
-
   renderer->AddActor( unionActor );
   unionActor->Delete();
+
+  vtkActor *intersectionActor =
+    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
   renderer->AddActor( intersectionActor );
   intersectionActor->Delete();
+
+  vtkActor *differenceActor =
+    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
   renderer->AddActor( differenceActor );
   differenceActor->Delete();
 
   renWin->Render();
   renWinInteractor->Start();
-
-  renWinInteractor->Delete();
-  renWin->Delete();
 
   return EXIT_SUCCESS;
 }
