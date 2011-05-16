@@ -27,7 +27,6 @@
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkTriangle.h"
 
-vtkCxxRevisionMacro(vtkPolyDataDistance, "$Revision: 1.1 $");
 vtkStandardNewMacro(vtkPolyDataDistance);
 
 //-----------------------------------------------------------------------------

@@ -37,7 +37,7 @@
 class vtkPolyDataDistance : public vtkPolyDataAlgorithm {
 public:
   static vtkPolyDataDistance *New();
-  vtkTypeRevisionMacro(vtkPolyDataDistance, vtkPolyDataAlgorithm);
+  vtkTypeMacro(vtkPolyDataDistance, vtkPolyDataAlgorithm);
   void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:
