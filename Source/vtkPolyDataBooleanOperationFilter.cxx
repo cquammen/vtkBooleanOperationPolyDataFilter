@@ -32,9 +32,8 @@
 #include "vtkPolyDataDistance.h"
 #include "vtkPolyDataIntersection.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
+#include "vtkSmartPointer.h"
 
-
-vtkCxxRevisionMacro(vtkPolyDataBooleanOperationFilter, "$Revision: 1.1 $");
 vtkStandardNewMacro(vtkPolyDataBooleanOperationFilter);
 
 //-----------------------------------------------------------------------------
@@ -180,8 +179,8 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
   cellFields.IntersectFieldList(  pd1->GetCellData() );
 
   // Sort union/intersection.
-  vtkIdList* interList = vtkIdList::New();
-  vtkIdList* unionList = vtkIdList::New();
+  vtkSmartPointer< vtkIdList > interList = vtkSmartPointer< vtkIdList >::New();
+  vtkSmartPointer< vtkIdList > unionList = vtkSmartPointer< vtkIdList >::New();
 
   this->SortPolyData(pd0, interList, unionList);
 
@@ -201,7 +200,8 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
     }
 
   // Label sources for each point and cell.
-  vtkIntArray* pointSourceLabel = vtkIntArray::New();
+  vtkSmartPointer< vtkIntArray > pointSourceLabel =
+    vtkSmartPointer< vtkIntArray >::New();
   pointSourceLabel->SetNumberOfComponents(1);
   pointSourceLabel->SetName("PointSource");
   pointSourceLabel->SetNumberOfTuples(outputSurface->GetNumberOfPoints());
@@ -210,7 +210,8 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
     pointSourceLabel->InsertValue(i, 0);
     }
 
-  vtkIntArray *cellSourceLabel = vtkIntArray::New();
+  vtkSmartPointer< vtkIntArray > cellSourceLabel =
+    vtkSmartPointer< vtkIntArray >::New();
   cellSourceLabel->SetNumberOfComponents(1);
   cellSourceLabel->SetName("CellSource");
   cellSourceLabel->SetNumberOfValues(outputSurface->GetNumberOfCells());
@@ -252,12 +253,7 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
     }
 
   outputSurface->GetPointData()->AddArray(pointSourceLabel);
-  pointSourceLabel->Delete();
   outputSurface->GetCellData()->AddArray(cellSourceLabel);
-  cellSourceLabel->Delete();
-
-  unionList->Delete();
-  interList->Delete();
 
   outputSurface->Squeeze();
   outputSurface->GetPointData()->Squeeze();
@@ -312,12 +308,13 @@ void vtkPolyDataBooleanOperationFilter
 
   if ( out->GetPoints() == NULL)
     {
-    out->SetPoints( vtkPoints::New() );
+    vtkSmartPointer< vtkPoints > points = vtkSmartPointer< vtkPoints >::New();
+    out->SetPoints( points );
     }
 
   vtkPoints *newPoints = out->GetPoints();
 
-  vtkIdList *pointMap = vtkIdList::New();
+  vtkSmartPointer< vtkIdList > pointMap = vtkSmartPointer< vtkIdList >::New();
   pointMap->SetNumberOfIds( numPts );
   for ( vtkIdType i = 0; i < numPts; i++ )
     {
@@ -325,8 +322,10 @@ void vtkPolyDataBooleanOperationFilter
     }
 
   // Filter the cells
-  vtkGenericCell *cell = vtkGenericCell::New();
-  vtkIdList *newCellPts = vtkIdList::New();
+  vtkSmartPointer< vtkGenericCell > cell =
+    vtkSmartPointer< vtkGenericCell> ::New();
+  vtkSmartPointer< vtkIdList > newCellPts =
+    vtkSmartPointer< vtkIdList >::New();
   for ( vtkIdType cellId = 0; cellId < cellIds->GetNumberOfIds(); cellId++ )
     {
     in->GetCell( cellIds->GetId( cellId ), cell );
@@ -378,7 +377,4 @@ void vtkPolyDataBooleanOperationFilter
     newCellPts->Reset();
     } // for all cells
 
-  newCellPts->Delete();
-  pointMap->Delete();
-  cell->Delete();
 }

@@ -45,8 +45,8 @@ public:
   // Construct object that computes the boolean surface.
   static vtkPolyDataBooleanOperationFilter *New();
 
-  vtkTypeRevisionMacro(vtkPolyDataBooleanOperationFilter,
-                       vtkPolyDataAlgorithm);
+  vtkTypeMacro(vtkPolyDataBooleanOperationFilter,
+               vtkPolyDataAlgorithm);
 
   void PrintSelf(ostream& os, vtkIndent indent);
 
