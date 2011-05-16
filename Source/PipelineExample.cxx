@@ -9,6 +9,7 @@
 #include <vtkRenderWindow.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkReverseSense.h>
+#include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkThreshold.h>
 
@@ -16,27 +17,33 @@
 vtkActor* GetBooleanOperationActor( double x, int operation )
 {
   double centerSeparation = 0.15;
-  vtkSphereSource *sphere1 = vtkSphereSource::New();
+  vtkSmartPointer<vtkSphereSource> sphere1 =
+    vtkSmartPointer<vtkSphereSource>::New();
   sphere1->SetCenter(-centerSeparation + x, 0.0, 0.0);
 
-  vtkSphereSource *sphere2 = vtkSphereSource::New();
+  vtkSmartPointer<vtkSphereSource> sphere2 =
+    vtkSmartPointer<vtkSphereSource>::New();
   sphere2->SetCenter(  centerSeparation + x, 0.0, 0.0);
 
-  vtkPolyDataIntersection *intersection = vtkPolyDataIntersection::New();
+  vtkSmartPointer<vtkPolyDataIntersection> intersection =
+    vtkSmartPointer<vtkPolyDataIntersection>::New();
   intersection->SetInputConnection( 0, sphere1->GetOutputPort() );
   intersection->SetInputConnection( 1, sphere2->GetOutputPort() );
 
-  vtkPolyDataDistance *distance = vtkPolyDataDistance::New();
+  vtkSmartPointer<vtkPolyDataDistance> distance =
+    vtkSmartPointer<vtkPolyDataDistance>::New();
   distance->SetInputConnection( 0, intersection->GetOutputPort( 1 ) );
   distance->SetInputConnection( 1, intersection->GetOutputPort( 2 ) );
 
-  vtkThreshold *thresh1 = vtkThreshold::New();
+  vtkSmartPointer<vtkThreshold> thresh1 =
+    vtkSmartPointer<vtkThreshold>::New();
   thresh1->AllScalarsOn();
   thresh1->SetInputArrayToProcess
     ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "Distance" );
   thresh1->SetInputConnection( distance->GetOutputPort( 0 ) );
 
-  vtkThreshold *thresh2 = vtkThreshold::New();
+  vtkSmartPointer<vtkThreshold> thresh2 =
+    vtkSmartPointer<vtkThreshold>::New();
   thresh2->AllScalarsOn();
   thresh2->SetInputArrayToProcess
     ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "Distance" );
@@ -58,15 +65,16 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
     thresh2->ThresholdByLower( 0.0 );
     }
 
-  vtkDataSetSurfaceFilter *surface1 = vtkDataSetSurfaceFilter::New();
+  vtkSmartPointer<vtkDataSetSurfaceFilter> surface1 =
+    vtkSmartPointer<vtkDataSetSurfaceFilter>::New();
   surface1->SetInputConnection( thresh1->GetOutputPort() );
-  thresh1->Delete();
 
-  vtkDataSetSurfaceFilter *surface2 = vtkDataSetSurfaceFilter::New();
+  vtkSmartPointer<vtkDataSetSurfaceFilter> surface2 =
+    vtkSmartPointer<vtkDataSetSurfaceFilter>::New();
   surface2->SetInputConnection( thresh2->GetOutputPort() );
-  thresh2->Delete();
 
-  vtkReverseSense *reverseSense = vtkReverseSense::New();
+  vtkSmartPointer<vtkReverseSense> reverseSense =
+    vtkSmartPointer<vtkReverseSense>::New();
   reverseSense->SetInputConnection( surface2->GetOutputPort() );
   if ( operation == 2 ) // difference
     {
@@ -74,7 +82,8 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
     reverseSense->ReverseNormalsOn();
     }
 
-  vtkAppendPolyData *appender = vtkAppendPolyData::New();
+  vtkSmartPointer<vtkAppendPolyData> appender =
+    vtkSmartPointer<vtkAppendPolyData>::New();
   appender->SetInputConnection( surface1->GetOutputPort() );
   if ( operation == 2)
     {
@@ -84,15 +93,14 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
     {
     appender->AddInputConnection( surface2->GetOutputPort() );
     }
-  surface2->Delete();
 
-  vtkPolyDataMapper *mapper = vtkPolyDataMapper::New();
+  vtkSmartPointer<vtkPolyDataMapper> mapper =
+    vtkSmartPointer<vtkPolyDataMapper>::New();
   mapper->SetInputConnection( appender->GetOutputPort() );
   mapper->ScalarVisibilityOff();
 
   vtkActor *actor = vtkActor::New();
   actor->SetMapper( mapper );
-  mapper->Delete();
 
   return actor;
 }
@@ -100,33 +108,34 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
 
 int main(int argc, char* argv[])
 {
-  vtkRenderer *renderer = vtkRenderer::New();
+  vtkSmartPointer<vtkRenderer> renderer =
+    vtkSmartPointer<vtkRenderer>::New();
 
-  vtkRenderWindow *renWin = vtkRenderWindow::New();
+  vtkSmartPointer<vtkRenderWindow> renWin =
+    vtkSmartPointer<vtkRenderWindow>::New();
   renWin->AddRenderer( renderer );
 
-  vtkRenderWindowInteractor * renWinInteractor = vtkRenderWindowInteractor::New();
+  vtkSmartPointer<vtkRenderWindowInteractor> renWinInteractor =
+    vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renWinInteractor->SetRenderWindow( renWin );
 
   vtkActor *unionActor =
     GetBooleanOperationActor( -2.0, vtkPolyDataBooleanOperationFilter::UNION );
-  vtkActor *intersectionActor =
-    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
-  vtkActor *differenceActor =
-    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
-
   renderer->AddActor( unionActor );
   unionActor->Delete();
+
+  vtkActor *intersectionActor =
+    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
   renderer->AddActor( intersectionActor );
   intersectionActor->Delete();
+
+  vtkActor *differenceActor =
+    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
   renderer->AddActor( differenceActor );
   differenceActor->Delete();
 
   renWin->Render();
   renWinInteractor->Start();
-
-  renWinInteractor->Delete();
-  renWin->Delete();
 
   return EXIT_SUCCESS;
 }

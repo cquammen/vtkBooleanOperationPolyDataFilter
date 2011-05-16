@@ -7,33 +7,27 @@
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 
-#include <vtkImplicitPolyData.h>
-#include <vtkPolyDataDistance.h>
-#include <vtkPolyDataBooleanOperationFilter.h>
-
-#include <vtkPolyDataIntersection.h>
-
-#define vtkNewSmartPointer( classname, var ) \
-  vtkSmartPointer<classname> var = vtkSmartPointer<classname>::New();
-
 
 vtkActor* GetBooleanOperationActor( double x, int operation )
 {
   double centerSeparation = 0.15;
-  vtkNewSmartPointer(vtkSphereSource, sphere1);
+  vtkSmartPointer<vtkSphereSource> sphere1 =
+    vtkSmartPointer<vtkSphereSource>::New();
   sphere1->SetCenter(-centerSeparation + x, 0.0, 0.0);
 
-  vtkNewSmartPointer(vtkSphereSource, sphere2);
+  vtkSmartPointer<vtkSphereSource> sphere2 =
+    vtkSmartPointer<vtkSphereSource>::New();
   sphere2->SetCenter(  centerSeparation + x, 0.0, 0.0);
 
-  vtkNewSmartPointer(vtkPolyDataBooleanOperationFilter, boolFilter);
+  vtkSmartPointer<vtkPolyDataBooleanOperationFilter> boolFilter =
+    vtkSmartPointer<vtkPolyDataBooleanOperationFilter>::New();
   boolFilter->SetOperation( operation );
   boolFilter->SetInputConnection( 0, sphere1->GetOutputPort() );
   boolFilter->SetInputConnection( 1, sphere2->GetOutputPort() );
-  boolFilter->Update();
 
-  vtkNewSmartPointer(vtkPolyDataMapper, mapper);
-  mapper->SetInputConnection( boolFilter->GetOutputPort() );
+  vtkSmartPointer<vtkPolyDataMapper> mapper =
+    vtkSmartPointer<vtkPolyDataMapper>::New();
+  mapper->SetInputConnection( boolFilter->GetOutputPort( 0 ) );
   mapper->ScalarVisibilityOff();
 
   vtkActor *actor = vtkActor::New();
@@ -45,11 +39,14 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
 
 int main(int argc, char* argv[])
 {
-  vtkNewSmartPointer(vtkRenderer, renderer);
-  vtkNewSmartPointer(vtkRenderWindow, renWin);
+  vtkSmartPointer<vtkRenderer> renderer =
+    vtkSmartPointer<vtkRenderer>::New();
+  vtkSmartPointer<vtkRenderWindow> renWin =
+    vtkSmartPointer<vtkRenderWindow>::New();
   renWin->AddRenderer( renderer );
 
-  vtkNewSmartPointer(vtkRenderWindowInteractor, renWinInteractor);
+  vtkSmartPointer<vtkRenderWindowInteractor> renWinInteractor =
+    vtkSmartPointer<vtkRenderWindowInteractor>::New();
   renWinInteractor->SetRenderWindow( renWin );
 
   vtkActor *unionActor =
