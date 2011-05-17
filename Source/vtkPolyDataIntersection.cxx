@@ -545,7 +545,8 @@ vtkCellArray* vtkPolyDataIntersection::Impl
           double dist = vtkLine::DistanceToLine(x, edgePt0, edgePt1, t,
                                                 closestPt);
 
-          if ( fabs(dist) < 1e-9 && t >= 0.0 && t <= 1.0 )
+          double epsilon = 1e-6;
+          if ( fabs(dist) < epsilon && t >= 0.0 && t <= 1.0 )
             {
             // Point is on edge. See if it is in the point ID map. If
             // not, add it as a point.
@@ -601,10 +602,11 @@ vtkCellArray* vtkPolyDataIntersection::Impl
     double d1 = vtkLine::DistanceToLine(x, p1, p2, t1, closestPt);
     double d2 = vtkLine::DistanceToLine(x, p2, p0, t2, closestPt);
 
+    double epsilon = 1e-6;
     if ( (ptId < 3) || // Cell points
-         (d0 < 1e-9 && t0 >= 0.0 && t0 <= 1.0) ||
-         (d1 < 1e-9 && t1 >= 0.0 && t1 <= 1.0) ||
-         (d2 < 1e-9 && t2 >= 0.0 && t2 <= 1.0) )
+         (d0 < epsilon && t0 >= 0.0 && t0 <= 1.0) ||
+         (d1 < epsilon && t1 >= 0.0 && t1 <= 1.0) ||
+         (d2 < epsilon && t2 >= 0.0 && t2 <= 1.0) )
       {
       // Point is on line. Add its id to id list and add its angle to
       // angle list.
