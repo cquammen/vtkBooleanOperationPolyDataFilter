@@ -66,48 +66,19 @@ void vtkPolyDataBooleanOperationFilter::SortPolyData(vtkPolyData* input,
   int numCells = input->GetNumberOfCells();
 
   double* dist = static_cast<double*>(input->GetPointData()->GetArray("Distance")->WriteVoidPointer(0, 0));
+  vtkDoubleArray *distArray = vtkDoubleArray::SafeDownCast
+    ( input->GetCellData()->GetArray("Distance") );
 
-  vtkIdType npts;
-  vtkIdType* pts;
   for (int cid = 0; cid < numCells; cid++)
     {
-    input->GetCellPoints(cid, npts, pts);
 
-    int outCount = 0, inCount = 0, onCount = 0;
-    for (int i = 0; i < npts; i++)
+    if ( distArray->GetValue( cid ) > this->Tolerance )
       {
-      outCount += (dist[pts[i]] >  this->Tolerance ? 1 : 0);
-      inCount  += (dist[pts[i]] < -this->Tolerance ? 1 : 0);
-      onCount  += (fabs(dist[pts[i]]) <= this->Tolerance ? 1 : 0);
-      }
-
-    // Sort between union and intersection.
-    if (onCount == npts) // Completely on inter surface
-      {
-      interList->InsertNextId(cid);
-      }
-    else if (outCount + onCount == npts)
-      {
-      unionList->InsertNextId(cid);
-      }
-    else if (inCount + onCount == npts)
-      {
-      interList->InsertNextId(cid);
+      unionList->InsertNextId( cid );
       }
     else
       {
-      // Some points have positive distance and some have negative
-      // distance. Do a simple vote based on which side has the most
-      // points.  This shouldn't ever happen when the inputs are
-      // processed by the vtkPolyDataIntersection class.
-      if (outCount > inCount)
-        {
-        unionList->InsertNextId(cid);
-        }
-      else
-        {
-        interList->InsertNextId(cid);
-        }
+      interList->InsertNextId( cid );
       }
     }
 }

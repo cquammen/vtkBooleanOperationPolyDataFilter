@@ -71,6 +71,7 @@ int vtkPolyDataDistance::RequestData(vtkInformation*        vtkNotUsed(request),
   output0->CopyStructure(input0);
   output0->GetPointData()->PassData(input0->GetPointData());
   output0->GetCellData()->PassData(input0->GetCellData());
+  output0->BuildCells();
   this->GetPolyDataDistance(output0, input1);
 
   if (this->ComputeSecondDistance)
@@ -78,6 +79,7 @@ int vtkPolyDataDistance::RequestData(vtkInformation*        vtkNotUsed(request),
     output1->CopyStructure(input1);
     output1->GetPointData()->PassData(input1->GetPointData());
     output1->GetCellData()->PassData(input1->GetCellData());
+    output1->BuildCells();
     this->GetPolyDataDistance(output1, input0);
     }
 
@@ -101,31 +103,57 @@ void vtkPolyDataDistance::GetPolyDataDistance(vtkPolyData* mesh, vtkPolyData* sr
     return;
     }
 
+  vtkImplicitPolyData* imp = vtkImplicitPolyData::New();
+  imp->SetInput( src );
+
+  // Calculate distance from points.
   int numPts = mesh->GetNumberOfPoints();
 
-  vtkDoubleArray* da = vtkDoubleArray::New();
-  da->SetName("Distance");
-  da->SetNumberOfComponents(1);
-  da->SetNumberOfTuples(numPts);
+  vtkDoubleArray* pointArray = vtkDoubleArray::New();
+  pointArray->SetName( "Distance" );
+  pointArray->SetNumberOfComponents( 1 );
+  pointArray->SetNumberOfTuples( numPts );
 
-  double* dist = da->GetPointer(0);
-
-  vtkImplicitPolyData* imp = vtkImplicitPolyData::New();
-  imp->SetInput(src);
-
-  for (int i = 0; i < numPts; i++)
+  for (vtkIdType ptId = 0; ptId < numPts; ptId++)
     {
     double pt[3];
-    mesh->GetPoint(i, pt);
-    double val = imp->EvaluateFunction(pt);
-    dist[i] = SignedDistance ? (NegateDistance ? -val : val) : fabs(val);
+    mesh->GetPoint( ptId, pt );
+    double val = imp->EvaluateFunction( pt );
+    double dist = SignedDistance ? (NegateDistance ? -val : val) : fabs(val);
+    pointArray->SetValue( ptId, dist );
     }
 
-  mesh->GetPointData()->AddArray(da);
-  mesh->GetPointData()->SetActiveScalars("Distance");
+  mesh->GetPointData()->AddArray( pointArray );
+  pointArray->Delete();
+  mesh->GetPointData()->SetActiveScalars( "Distance" );
+
+  // Calculate distance from cell centers.
+  int numCells = mesh->GetNumberOfCells();
+
+  vtkDoubleArray* cellArray = vtkDoubleArray::New();
+  cellArray->SetName( "Distance" );
+  cellArray->SetNumberOfComponents( 1 );
+  cellArray->SetNumberOfTuples( numCells );
+
+  for (vtkIdType cellId = 0; cellId < numCells; cellId++)
+    {
+    vtkCell *cell = mesh->GetCell( cellId );
+    int subId;
+    double pcoords[3], x[3], weights[256];
+
+    cell->GetParametricCenter( pcoords );
+    cell->EvaluateLocation( subId, pcoords, x, weights );
+
+    double val = imp->EvaluateFunction( x );
+    double dist = SignedDistance ? (NegateDistance ? -val : val) : fabs(val);
+    cellArray->SetValue( cellId, dist );
+    }
+
+  mesh->GetCellData()->AddArray( cellArray );
+  cellArray->Delete();
+  mesh->GetCellData()->SetActiveScalars("Distance");
 
   imp->Delete();
-  da->Delete();
 
   vtkDebugMacro(<<"End vtkPolyDataDistance::GetPolyDataDistance");
 }
