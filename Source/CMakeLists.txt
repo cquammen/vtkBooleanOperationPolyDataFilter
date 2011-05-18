@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 INCLUDE(${CMAKE_SOURCE_DIR}/IJMacros.txt)
 
 #Change PROJECT_NAME to the name of your project
-PROJECT(PolyDataBooleanOperation)
+PROJECT(BooleanOperationPolyData)
 
 #The following lines are required to use Dart
 ENABLE_TESTING()
@@ -53,8 +53,8 @@ SET( ADDITIONAL_VTK_FILES
 SET(CurrentExe "PolyDataBooleanOperationFilterExample")
 ADD_EXECUTABLE(${CurrentExe}
   ${ADDITIONAL_VTK_FILES}
-  vtkPolyDataBooleanOperationFilter.cxx
-  PolyDataBooleanOperationFilterExample.cxx
+  vtkBooleanOperationPolyDataFilter.cxx
+  BooleanOperationPolyDataFilterExample.cxx
 )
 TARGET_LINK_LIBRARIES(${CurrentExe} ${Libraries})
 

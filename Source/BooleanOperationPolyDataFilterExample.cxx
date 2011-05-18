@@ -1,5 +1,5 @@
 #include <vtkActor.h>
-#include <vtkPolyDataBooleanOperationFilter.h>
+#include <vtkBooleanOperationPolyDataFilter.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -19,8 +19,8 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
     vtkSmartPointer<vtkSphereSource>::New();
   sphere2->SetCenter(  centerSeparation + x, 0.0, 0.0);
 
-  vtkSmartPointer<vtkPolyDataBooleanOperationFilter> boolFilter =
-    vtkSmartPointer<vtkPolyDataBooleanOperationFilter>::New();
+  vtkSmartPointer<vtkBooleanOperationPolyDataFilter> boolFilter =
+    vtkSmartPointer<vtkBooleanOperationPolyDataFilter>::New();
   boolFilter->SetOperation( operation );
   boolFilter->SetInputConnection( 0, sphere1->GetOutputPort() );
   boolFilter->SetInputConnection( 1, sphere2->GetOutputPort() );
@@ -50,17 +50,17 @@ int main(int argc, char* argv[])
   renWinInteractor->SetRenderWindow( renWin );
 
   vtkActor *unionActor =
-    GetBooleanOperationActor( -2.0, vtkPolyDataBooleanOperationFilter::UNION );
+    GetBooleanOperationActor( -2.0, vtkBooleanOperationPolyDataFilter::UNION );
   renderer->AddActor( unionActor );
   unionActor->Delete();
 
   vtkActor *intersectionActor =
-    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
+    GetBooleanOperationActor(  0.0, vtkBooleanOperationPolyDataFilter::INTERSECTION );
   renderer->AddActor( intersectionActor );
   intersectionActor->Delete();
 
   vtkActor *differenceActor =
-    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
+    GetBooleanOperationActor(  2.0, vtkBooleanOperationPolyDataFilter::DIFFERENCE );
   renderer->AddActor( differenceActor );
   differenceActor->Delete();
 

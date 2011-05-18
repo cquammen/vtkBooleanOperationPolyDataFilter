@@ -1,7 +1,7 @@
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
 #include <vtkDataSetSurfaceFilter.h>
-#include <vtkPolyDataBooleanOperationFilter.h>
+#include <vtkBooleanOperationPolyDataFilter.h>
 #include <vtkPolyDataDistance.h>
 #include <vtkPolyDataIntersection.h>
 #include <vtkPolyDataMapper.h>
@@ -39,22 +39,22 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
     vtkSmartPointer<vtkThreshold>::New();
   thresh1->AllScalarsOn();
   thresh1->SetInputArrayToProcess
-    ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "Distance" );
+    ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_CELLS, "Distance" );
   thresh1->SetInputConnection( distance->GetOutputPort( 0 ) );
 
   vtkSmartPointer<vtkThreshold> thresh2 =
     vtkSmartPointer<vtkThreshold>::New();
   thresh2->AllScalarsOn();
   thresh2->SetInputArrayToProcess
-    ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_POINTS, "Distance" );
+    ( 0, 0, 0, vtkDataObject::FIELD_ASSOCIATION_CELLS, "Distance" );
   thresh2->SetInputConnection( distance->GetOutputPort( 1 ) );
 
-  if ( operation == vtkPolyDataBooleanOperationFilter::UNION )
+  if ( operation == vtkBooleanOperationPolyDataFilter::UNION )
     {
     thresh1->ThresholdByUpper( 0.0 );
     thresh2->ThresholdByUpper( 0.0 );
     }
-  else if ( operation == vtkPolyDataBooleanOperationFilter::INTERSECTION )
+  else if ( operation == vtkBooleanOperationPolyDataFilter::INTERSECTION )
     {
     thresh1->ThresholdByLower( 0.0 );
     thresh2->ThresholdByLower( 0.0 );
@@ -120,17 +120,17 @@ int main(int argc, char* argv[])
   renWinInteractor->SetRenderWindow( renWin );
 
   vtkActor *unionActor =
-    GetBooleanOperationActor( -2.0, vtkPolyDataBooleanOperationFilter::UNION );
+    GetBooleanOperationActor( -2.0, vtkBooleanOperationPolyDataFilter::UNION );
   renderer->AddActor( unionActor );
   unionActor->Delete();
 
   vtkActor *intersectionActor =
-    GetBooleanOperationActor(  0.0, vtkPolyDataBooleanOperationFilter::INTERSECTION );
+    GetBooleanOperationActor(  0.0, vtkBooleanOperationPolyDataFilter::INTERSECTION );
   renderer->AddActor( intersectionActor );
   intersectionActor->Delete();
 
   vtkActor *differenceActor =
-    GetBooleanOperationActor(  2.0, vtkPolyDataBooleanOperationFilter::DIFFERENCE );
+    GetBooleanOperationActor(  2.0, vtkBooleanOperationPolyDataFilter::DIFFERENCE );
   renderer->AddActor( differenceActor );
   differenceActor->Delete();
 

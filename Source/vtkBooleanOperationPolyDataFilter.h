@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataBooleanOperationFilter.h
+  Module:    vtkBooleanOperationPolyDataFilter.h
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,7 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkPolyDataBooleanOperationFilter
+// .NAME vtkBooleanOperationPolyDataFilter
 // .SECTION Description
 //
 // Computes the boundary of the union, intersection, or difference
@@ -26,8 +26,8 @@
 // Written by Chris Weigle and Cory Quammen, The University of North
 // Carolina at Chapel Hill.
 
-#ifndef __vtkPolyDataBooleanOperationFilter_h
-#define __vtkPolyDataBooleanOperationFilter_h
+#ifndef __vtkBooleanOperationPolyDataFilter_h
+#define __vtkBooleanOperationPolyDataFilter_h
 
 #include "vtkPolyDataAlgorithm.h"
 
@@ -38,14 +38,14 @@ class vtkPolyDataDistance;
 class vtkPolyDataIntersection;
 
 
-class vtkPolyDataBooleanOperationFilter : public vtkPolyDataAlgorithm
+class vtkBooleanOperationPolyDataFilter : public vtkPolyDataAlgorithm
 {
 public:
   // Description:
   // Construct object that computes the boolean surface.
-  static vtkPolyDataBooleanOperationFilter *New();
+  static vtkBooleanOperationPolyDataFilter *New();
 
-  vtkTypeMacro(vtkPolyDataBooleanOperationFilter,
+  vtkTypeMacro(vtkBooleanOperationPolyDataFilter,
                vtkPolyDataAlgorithm);
 
   void PrintSelf(ostream& os, vtkIndent indent);
@@ -82,8 +82,8 @@ public:
   vtkGetMacro(Tolerance, double);
 
 protected:
-  vtkPolyDataBooleanOperationFilter();
-  ~vtkPolyDataBooleanOperationFilter();
+  vtkBooleanOperationPolyDataFilter();
+  ~vtkBooleanOperationPolyDataFilter();
 
   // Description:
   // Tolerance used to determine when a point's absolute
@@ -108,8 +108,8 @@ protected:
   int ReorientDifferenceCells;
 
 private:
-  vtkPolyDataBooleanOperationFilter(const vtkPolyDataBooleanOperationFilter&); // no implementation
-  void operator=(const vtkPolyDataBooleanOperationFilter&); // no implementation
+  vtkBooleanOperationPolyDataFilter(const vtkBooleanOperationPolyDataFilter&); // no implementation
+  void operator=(const vtkBooleanOperationPolyDataFilter&); // no implementation
 
   // Description:
   // Copies cells with indices given by  from one vtkPolyData to

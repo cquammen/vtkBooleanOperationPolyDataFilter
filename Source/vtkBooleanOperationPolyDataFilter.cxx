@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataBooleanOperationFilter.cxx
+  Module:    vtkBooleanOperationPolyDataFilter.cxx
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,7 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-#include "vtkPolyDataBooleanOperationFilter.h"
+#include "vtkBooleanOperationPolyDataFilter.h"
 
 #include "vtkCellArray.h"
 #include "vtkCellData.h"
@@ -34,10 +34,10 @@
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkSmartPointer.h"
 
-vtkStandardNewMacro(vtkPolyDataBooleanOperationFilter);
+vtkStandardNewMacro(vtkBooleanOperationPolyDataFilter);
 
 //-----------------------------------------------------------------------------
-vtkPolyDataBooleanOperationFilter::vtkPolyDataBooleanOperationFilter() :
+vtkBooleanOperationPolyDataFilter::vtkBooleanOperationPolyDataFilter() :
   vtkPolyDataAlgorithm()
 {
   this->Tolerance = 1e-6;
@@ -52,14 +52,14 @@ vtkPolyDataBooleanOperationFilter::vtkPolyDataBooleanOperationFilter() :
 }
 
 //-----------------------------------------------------------------------------
-vtkPolyDataBooleanOperationFilter::~vtkPolyDataBooleanOperationFilter()
+vtkBooleanOperationPolyDataFilter::~vtkBooleanOperationPolyDataFilter()
 {
   this->PolyDataIntersection->Delete();
   this->PolyDataDistance->Delete();
 }
 
 //-----------------------------------------------------------------------------
-void vtkPolyDataBooleanOperationFilter::SortPolyData(vtkPolyData* input,
+void vtkBooleanOperationPolyDataFilter::SortPolyData(vtkPolyData* input,
                                        vtkIdList* interList,
                                        vtkIdList* unionList)
 {
@@ -85,7 +85,7 @@ void vtkPolyDataBooleanOperationFilter::SortPolyData(vtkPolyData* input,
 
 
 //-----------------------------------------------------------------------------
-int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNotUsed(request),
+int vtkBooleanOperationPolyDataFilter::RequestData(vtkInformation*        vtkNotUsed(request),
                                      vtkInformationVector** inputVector,
                                      vtkInformationVector*  outputVector)
 {
@@ -238,13 +238,13 @@ int vtkPolyDataBooleanOperationFilter::RequestData(vtkInformation*        vtkNot
 }
 
 //-----------------------------------------------------------------------------
-void vtkPolyDataBooleanOperationFilter::PrintSelf(ostream& os, vtkIndent indent)
+void vtkBooleanOperationPolyDataFilter::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 }
 
 //-----------------------------------------------------------------------------
-int vtkPolyDataBooleanOperationFilter::FillInputPortInformation(int port, vtkInformation *info)
+int vtkBooleanOperationPolyDataFilter::FillInputPortInformation(int port, vtkInformation *info)
 {
   if (!this->Superclass::FillInputPortInformation(port, info)) return 0;
   if (port == 0)
@@ -260,7 +260,7 @@ int vtkPolyDataBooleanOperationFilter::FillInputPortInformation(int port, vtkInf
 }
 
 //-----------------------------------------------------------------------------
-void vtkPolyDataBooleanOperationFilter
+void vtkBooleanOperationPolyDataFilter
 ::CopyCells(vtkPolyData* in, vtkPolyData* out, int idx,
             vtkDataSetAttributes::FieldList & pointFieldList,
             vtkDataSetAttributes::FieldList & cellFieldList,
