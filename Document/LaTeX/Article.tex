@@ -44,7 +44,7 @@ colorlinks,linkcolor={blue},citecolor={blue},urlcolor={blue},
 
 % Increment the release number whenever significant changes are made.
 % The author and/or editor can define 'significant' however they like.
-\release{1.00}
+\release{2.00}
 
 % At minimum, give your name and an email address.  You can include a
 % snail-mail address if you like.
@@ -160,7 +160,7 @@ use to determine when the absolute value of the signed distance is close enough 
 
 \subsection{vtkPolyDataDistance}
 
-To support distance-based boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from points in the first input \code{vtkPolyData} to a second by evaluating the signed distance field from the second input using the \code{vtkImplicitPolyData} class. Optionally, the distance from points in the second input \code{vtkPolyData} to the first can also be computed. These distances are stored as a point data field named ``Distance''.
+To support distance-based boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from points in the first input \code{vtkPolyData} to a second by evaluating the signed distance field from the second input using the \code{vtkImplicitPolyData} class. Optionally, the distance from points in the second input \code{vtkPolyData} to the first can also be computed. These distances are stored as a point data field named ``Distance''. In addition, the filter computes a cell data field named ``Distance'' that contains the distance from the center of each cell to the nearest point on the second input
 
 \code{vtkPolyDataDistance} has some options. Use the methods
 \begin{verbatim}
@@ -296,11 +296,11 @@ These options specify whether the output meshes should be split. Each option is 
 
 \section{Putting it All Together}
 
-There are two ways to use the classes we have developed to compute the surface mesh resulting from a boolean operation on two surface meshes: setting up a VTK pipeline or using a new class \code{vtkPolyDataBooleanOperationFilter}.
+There are two ways to use the classes we have developed to compute the surface mesh resulting from a boolean operation on two surface meshes: setting up a VTK pipeline or using a new class \code{vtkBooleanOperationPolyDataFilter}.
 
 \subsection{Setting up a VTK Pipeline for Boolean Operations on Surfaces}
 
-To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two arrows between \code{vtkPolyDataIntersection} and \code{vtkPolyDataDistance} indicate that the two output surfaces from \code{vtkPolyDataIntersection} are set as the input to \code{vtkPolyDataDistance}. The two instances of \code{vtkThreshold} operate on different outputs of \code{vtkPolyDataDistance}.
+To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two arrows between \code{vtkPolyDataIntersection} and \code{vtkPolyDataDistance} indicate that the two output surfaces from \code{vtkPolyDataIntersection} are set as the input to \code{vtkPolyDataDistance}. The two instances of \code{vtkThreshold} operate on the two outputs of \code{vtkPolyDataDistance}. The example \verb+PipelineExample.cxx+ included with the source code in this article shows how to set up a pipeline to compute boolean operations.
 
 \begin{figure}[t]
 \begin{center}
@@ -339,9 +339,9 @@ $\downarrow$
 \label{fig:Pipeline}
 \end{figure}
 
-\subsection{vtkPolyDataBooleanOperationFilter}
+\subsection{vtkBooleanOperationPolyDataFilter}
 
-For convenience, we have included a single class that replicates the functionality  class for computing boolean operations on surface meshes, \code{vtkPolyDataBooleanOperationFilter}, that encapsulates the functionality of the pipeline above. This class has three options. The desired boolean operation is specified with one of
+For convenience, we have included a single class that replicates the functionality  class for computing boolean operations on surface meshes, \code{vtkBooleanOperationPolyDataFilter}, that encapsulates the functionality of the pipeline above. This class has three options. The desired boolean operation is specified with one of
 \begin{verbatim}
 void SetOperationToUnion();
 void SetOperationToIntersection();
@@ -358,6 +358,9 @@ void ReorientDifferenceCellsOff();
 \end{verbatim} 
 
 Lastly, the \code{Tolerance} sets a threshold on the absolute value of a distance field value below which the distance is considered to be zero.
+
+An example in the file \verb+BooleanOperationPolyDataFilterExample.cxx+ is included in the source code for this article.
+
 \section{Results}
 
 Results from boolean operations on various pairs of geometric objects are shown in Figure \ref{fig:Results}.
