@@ -280,7 +280,7 @@ int vtkPolyDataIntersection::Impl
   ///////////////////////////////////////////////////////////////////////////
   // Process points
   ///////////////////////////////////////////////////////////////////////////
-  vtkIdType numPoints = input->GetPoints()->GetNumberOfPoints();
+  vtkIdType inputNumPoints = input->GetPoints()->GetNumberOfPoints();
   vtkSmartPointer< vtkPoints > points = vtkSmartPointer< vtkPoints >::New();
   points->Allocate(100);
   output->SetPoints(points);
@@ -301,7 +301,7 @@ int vtkPolyDataIntersection::Impl
   outPD->CopyAllocate( inPD, input->GetNumberOfPoints() );
 
   // Copy over the point data from the input
-  for (vtkIdType ptId = 0; ptId < numPoints; ptId++)
+  for (vtkIdType ptId = 0; ptId < inputNumPoints; ptId++)
     {
     double pt[3];
     input->GetPoints()->GetPoint(ptId, pt);
@@ -453,7 +453,7 @@ vtkCellArray* vtkPolyDataIntersection::Impl
   vtkSmartPointer< vtkPoints > points = vtkSmartPointer< vtkPoints >::New();
   vtkSmartPointer< vtkPointLocator > merger =
     vtkSmartPointer< vtkPointLocator >::New();
-  merger->SetTolerance( 1e-9 );
+  merger->SetTolerance( 1e-6 );
   merger->InitPointInsertion( points, input->GetBounds() );
 
   double x[3];
@@ -545,8 +545,7 @@ vtkCellArray* vtkPolyDataIntersection::Impl
           double dist = vtkLine::DistanceToLine(x, edgePt0, edgePt1, t,
                                                 closestPt);
 
-          double epsilon = 1e-6;
-          if ( fabs(dist) < epsilon && t >= 0.0 && t <= 1.0 )
+          if ( fabs(dist) < 1e-6 && t >= 0.0 && t <= 1.0 )
             {
             // Point is on edge. See if it is in the point ID map. If
             // not, add it as a point.
@@ -709,17 +708,10 @@ vtkCellArray* vtkPolyDataIntersection::Impl
   vtkCellArray *splitCells = vtkCellArray::New();
   splitCells->Allocate( 3*polys->GetNumberOfCells() );
 
-  double area = 0.0;
-
   // Renumber the point IDs.
   vtkIdType npts, *ptIds;
   for (polys->InitTraversal(); polys->GetNextCell(npts, ptIds); )
     {
-    del2D->GetOutput()->GetPoint(ptIds[0], p0);
-    del2D->GetOutput()->GetPoint(ptIds[1], p1);
-    del2D->GetOutput()->GetPoint(ptIds[2], p2);
-    area += vtkTriangle::TriangleArea( p0, p1, p2 );
-
     if ( ptIds[0] >= points->GetNumberOfPoints() ||
          ptIds[1] >= points->GetNumberOfPoints() ||
          ptIds[2] >= points->GetNumberOfPoints() )
@@ -730,14 +722,16 @@ vtkCellArray* vtkPolyDataIntersection::Impl
     splitCells->InsertNextCell( npts );
     for (int i = 0; i < npts; i++)
       {
+      vtkIdType remappedPtId;
       if ( ptIds[i] < 3) // Point from the cell
         {
-        splitCells->InsertCellPoint( cellPts[ ptIds[i] ] );
+        remappedPtId = cellPts[ ptIds[i] ];
         }
       else
         {
-        splitCells->InsertCellPoint( reverseIdMap[ ptIds[i] ] );
+        remappedPtId = reverseIdMap[ ptIds[i] ];
         }
+      splitCells->InsertCellPoint( remappedPtId );
       }
     }
 
