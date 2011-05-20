@@ -1,9 +1,9 @@
 #include <vtkActor.h>
 #include <vtkAppendPolyData.h>
-#include <vtkDataSetSurfaceFilter.h>
 #include <vtkBooleanOperationPolyDataFilter.h>
+#include <vtkDataSetSurfaceFilter.h>
 #include <vtkDistancePolyDataFilter.h>
-#include <vtkPolyDataIntersection.h>
+#include <vtkIntersectionPolyDataFilter.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
@@ -25,8 +25,8 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
     vtkSmartPointer<vtkSphereSource>::New();
   sphere2->SetCenter(  centerSeparation + x, 0.0, 0.0);
 
-  vtkSmartPointer<vtkPolyDataIntersection> intersection =
-    vtkSmartPointer<vtkPolyDataIntersection>::New();
+  vtkSmartPointer<vtkIntersectionPolyDataFilter> intersection =
+    vtkSmartPointer<vtkIntersectionPolyDataFilter>::New();
   intersection->SetInputConnection( 0, sphere1->GetOutputPort() );
   intersection->SetInputConnection( 1, sphere2->GetOutputPort() );
 

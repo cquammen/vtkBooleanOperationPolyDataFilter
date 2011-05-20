@@ -46,7 +46,7 @@ SET(Libraries
 #You can build more than one executable per project
 SET( ADDITIONAL_VTK_FILES
   vtkImplicitPolyData.cxx
-  vtkPolyDataIntersection.cxx
+  vtkIntersectionPolyDataFilter.cxx
   vtkDistancePolyDataFilter.cxx
 )
 

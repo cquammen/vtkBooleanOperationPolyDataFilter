@@ -18,6 +18,7 @@
 #include "vtkCellData.h"
 #include "vtkDataArray.h"
 #include "vtkDataSetAttributes.h"
+#include "vtkDistancePolyDataFilter.h"
 #include "vtkDoubleArray.h"
 #include "vtkFloatArray.h"
 #include "vtkGenericCell.h"
@@ -26,11 +27,10 @@
 #include "vtkInformation.h"
 #include "vtkInformationVector.h"
 #include "vtkIntArray.h"
+#include "vtkIntersectionPolyDataFilter.h"
 #include "vtkObjectFactory.h"
 #include "vtkPointData.h"
 #include "vtkPolyData.h"
-#include "vtkDistancePolyDataFilter.h"
-#include "vtkPolyDataIntersection.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkSmartPointer.h"
 
@@ -47,7 +47,7 @@ vtkBooleanOperationPolyDataFilter::vtkBooleanOperationPolyDataFilter() :
   this->SetNumberOfInputPorts(2);
   this->SetNumberOfOutputPorts(2);
 
-  this->PolyDataIntersection = vtkPolyDataIntersection::New();
+  this->PolyDataIntersection = vtkIntersectionPolyDataFilter::New();
   this->PolyDataDistance = vtkDistancePolyDataFilter::New();
 }
 

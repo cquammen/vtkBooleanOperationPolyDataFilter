@@ -35,7 +35,7 @@
 
 class vtkIdList;
 class vtkDistancePolyDataFilter;
-class vtkPolyDataIntersection;
+class vtkIntersectionPolyDataFilter;
 
 
 class vtkBooleanOperationPolyDataFilter : public vtkPolyDataAlgorithm
@@ -120,7 +120,7 @@ private:
                  vtkDataSetAttributes::FieldList & cellFieldList,
                  vtkIdList* cellIds, bool reverseCells);
 
-  vtkPolyDataIntersection *PolyDataIntersection;
+  vtkIntersectionPolyDataFilter *PolyDataIntersection;
 
   vtkDistancePolyDataFilter *PolyDataDistance;
 

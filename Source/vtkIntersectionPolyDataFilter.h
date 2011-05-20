@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataIntersection.h
+  Module:    vtkIntersectionPolyDataFilter.h
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,10 +12,10 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkPolyDataIntersection
+// .NAME vtkIntersectionPolyDataFilter
 // .SECTION Description
 //
-// vtkPolyDataIntersection computes the intersection between two
+// vtkIntersectionPolyDataFilter computes the intersection between two
 // vtkPolyData objects. The first output is a set of lines that marks
 // the intersection of the input vtkPolyData objects. The second and
 // third outputs are the first and second input vtkPolyData,
@@ -25,17 +25,17 @@
 // Written by Chris Weigle and Cory Quammen, The University of North
 // Carolina at Chapel Hill.
 
-#ifndef __vtkPolyDataIntersection_h
-#define __vtkPolyDataIntersection_h
+#ifndef __vtkIntersectionPolyDataFilter_h
+#define __vtkIntersectionPolyDataFilter_h
 
 #include "vtkPolyDataAlgorithm.h"
 
 
-class vtkPolyDataIntersection : public vtkPolyDataAlgorithm
+class vtkIntersectionPolyDataFilter : public vtkPolyDataAlgorithm
 {
 public:
-  static vtkPolyDataIntersection *New();
-  vtkTypeMacro(vtkPolyDataIntersection, vtkPolyDataAlgorithm);
+  static vtkIntersectionPolyDataFilter *New();
+  vtkTypeMacro(vtkIntersectionPolyDataFilter, vtkPolyDataAlgorithm);
   virtual void PrintSelf(ostream &os, vtkIndent indent);
 
   // Description:
@@ -63,8 +63,8 @@ public:
                                           int &coplanar, double pt1[3], double pt2[3]);
 
 protected:
-  vtkPolyDataIntersection();
-  ~vtkPolyDataIntersection();
+  vtkIntersectionPolyDataFilter();
+  ~vtkIntersectionPolyDataFilter();
 
   int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*);
   int FillInputPortInformation(int, vtkInformation*);
@@ -73,11 +73,11 @@ protected:
   int SplitSecondOutput;
 
 private:
-  vtkPolyDataIntersection(const vtkPolyDataIntersection&); // no implementation
-  void operator=(const vtkPolyDataIntersection&);          // no implementation
+  vtkIntersectionPolyDataFilter(const vtkIntersectionPolyDataFilter&); // no implementation
+  void operator=(const vtkIntersectionPolyDataFilter&);          // no implementation
 
   class Impl;
 };
 
 
-#endif // __vtkPolyDataIntersection_h
+#endif // __vtkIntersectionPolyDataFilter_h

@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataIntersection.cxx
+  Module:    vtkIntersectionPolyDataFilter.cxx
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,7 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-#include "vtkPolyDataIntersection.h"
+#include "vtkIntersectionPolyDataFilter.h"
 
 #include "vtkCellArray.h"
 #include "vtkCellData.h"
@@ -55,7 +55,7 @@ typedef PointEdgeMapType::iterator                   PointEdgeMapIteratorType;
 //----------------------------------------------------------------------------
 // Private implementation to hide STL.
 //----------------------------------------------------------------------------
-class vtkPolyDataIntersection::Impl
+class vtkIntersectionPolyDataFilter::Impl
 {
 public:
   Impl();
@@ -116,7 +116,7 @@ protected:
 };
 
 //----------------------------------------------------------------------------
-vtkPolyDataIntersection::Impl::Impl() :
+vtkIntersectionPolyDataFilter::Impl::Impl() :
   OBBTree1(0), IntersectionLines(0), PointMerger(0)
 {
   for (int i = 0; i < 2; i++)
@@ -129,7 +129,7 @@ vtkPolyDataIntersection::Impl::Impl() :
 }
 
 //----------------------------------------------------------------------------
-vtkPolyDataIntersection::Impl::~Impl()
+vtkIntersectionPolyDataFilter::Impl::~Impl()
 {
   for (int i = 0; i < 2; i++)
     {
@@ -140,12 +140,12 @@ vtkPolyDataIntersection::Impl::~Impl()
 
 
 //----------------------------------------------------------------------------
-int vtkPolyDataIntersection::Impl
+int vtkIntersectionPolyDataFilter::Impl
 ::FindTriangleIntersections(vtkOBBNode *node0, vtkOBBNode *node1,
                             vtkMatrix4x4 *transform, void *arg)
 {
-  vtkPolyDataIntersection::Impl *info =
-    reinterpret_cast<vtkPolyDataIntersection::Impl*>(arg);
+  vtkIntersectionPolyDataFilter::Impl *info =
+    reinterpret_cast<vtkIntersectionPolyDataFilter::Impl*>(arg);
 
   vtkPolyData     *mesh0                = info->Mesh[0];
   vtkPolyData     *mesh1                = info->Mesh[1];
@@ -201,7 +201,7 @@ int vtkPolyDataIntersection::Impl
             int coplanar = 0;
             double outpt0[3], outpt1[3];
             int intersects =
-              vtkPolyDataIntersection::TriangleTriangleIntersection
+              vtkIntersectionPolyDataFilter::TriangleTriangleIntersection
                 (triPts0[0], triPts0[1], triPts0[2],
                  triPts1[0], triPts1[1], triPts1[2],
                  coplanar, outpt0, outpt1);
@@ -265,7 +265,7 @@ int vtkPolyDataIntersection::Impl
 
 
 //----------------------------------------------------------------------------
-int vtkPolyDataIntersection::Impl
+int vtkIntersectionPolyDataFilter::Impl
 ::SplitMesh(int inputIndex, vtkPolyData *output, vtkPolyData *intersectionLines)
 {
   vtkPolyData *input = this->Mesh[inputIndex];
@@ -356,7 +356,7 @@ int vtkPolyDataIntersection::Impl
       {
       if ( npts != 3 )
         {
-        vtkGenericWarningMacro( << "vtkPolyDataIntersection only works with "
+        vtkGenericWarningMacro( << "vtkIntersectionPolyDataFilter only works with "
                                 << "triangle meshes." );
         continue;
         }
@@ -445,7 +445,7 @@ int vtkPolyDataIntersection::Impl
 
 
 //----------------------------------------------------------------------------
-vtkCellArray* vtkPolyDataIntersection::Impl
+vtkCellArray* vtkIntersectionPolyDataFilter::Impl
 ::SplitCell(vtkPolyData *input, vtkIdType cellId, vtkIdType *cellPts,
             IntersectionMapType *map, vtkPolyData *interLines)
 {
@@ -739,7 +739,7 @@ vtkCellArray* vtkPolyDataIntersection::Impl
 }
 
 //----------------------------------------------------------------------------
-void vtkPolyDataIntersection::Impl
+void vtkIntersectionPolyDataFilter::Impl
 ::AddToPointEdgeMap(int index, vtkIdType ptId, double x[3], vtkPolyData *mesh,
                     vtkIdType cellId, vtkIdType edgeId, vtkIdType lineId,
                     vtkIdType triPtIds[3])
@@ -779,7 +779,7 @@ void vtkPolyDataIntersection::Impl
 }
 
 //----------------------------------------------------------------------------
-void vtkPolyDataIntersection::Impl
+void vtkIntersectionPolyDataFilter::Impl
 ::SplitIntersectionLines(int inputIndex, vtkPolyData *sourceMesh,
                          vtkPolyData *splitLines)
 {
@@ -876,10 +876,10 @@ void vtkPolyDataIntersection::Impl
 }
 
 //----------------------------------------------------------------------------
-vtkStandardNewMacro(vtkPolyDataIntersection);
+vtkStandardNewMacro(vtkIntersectionPolyDataFilter);
 
 //----------------------------------------------------------------------------
-vtkPolyDataIntersection::vtkPolyDataIntersection()
+vtkIntersectionPolyDataFilter::vtkIntersectionPolyDataFilter()
   : SplitFirstOutput(1), SplitSecondOutput(1)
 {
   this->SetNumberOfInputPorts(2);
@@ -887,12 +887,12 @@ vtkPolyDataIntersection::vtkPolyDataIntersection()
 }
 
 //----------------------------------------------------------------------------
-vtkPolyDataIntersection::~vtkPolyDataIntersection()
+vtkIntersectionPolyDataFilter::~vtkIntersectionPolyDataFilter()
 {
 }
 
 //----------------------------------------------------------------------------
-void vtkPolyDataIntersection::PrintSelf(ostream &os, vtkIndent indent)
+void vtkIntersectionPolyDataFilter::PrintSelf(ostream &os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 
@@ -901,7 +901,7 @@ void vtkPolyDataIntersection::PrintSelf(ostream &os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyDataIntersection
+int vtkIntersectionPolyDataFilter
 ::TriangleTriangleIntersection(double p1[3], double q1[3], double r1[3],
                                double p2[3], double q2[3], double r2[3],
                                int &coplanar, double pt1[3], double pt2[3])
@@ -1045,7 +1045,7 @@ int vtkPolyDataIntersection
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(request),
+int vtkIntersectionPolyDataFilter::RequestData(vtkInformation*        vtkNotUsed(request),
                                          vtkInformationVector** inputVector,
                                          vtkInformationVector*  outputVector)
 {
@@ -1101,7 +1101,7 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
 
   // Set up the structure for determining exact triangle-triangle
   // intersections.
-  vtkPolyDataIntersection::Impl *impl = new vtkPolyDataIntersection::Impl();
+  vtkIntersectionPolyDataFilter::Impl *impl = new vtkIntersectionPolyDataFilter::Impl();
   impl->Mesh[0]  = mesh0;
   impl->Mesh[1]  = mesh1;
   impl->OBBTree1 = obbTree1;
@@ -1145,7 +1145,7 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
 
   // This performs the triangle intersection search
   obbTree0->IntersectWithOBBTree
-    (obbTree1, 0, vtkPolyDataIntersection::Impl::FindTriangleIntersections,
+    (obbTree1, 0, vtkIntersectionPolyDataFilter::Impl::FindTriangleIntersections,
      impl);
 
   // Split the first output if so desired
@@ -1178,7 +1178,7 @@ int vtkPolyDataIntersection::RequestData(vtkInformation*        vtkNotUsed(reque
 }
 
 //----------------------------------------------------------------------------
-int vtkPolyDataIntersection::FillInputPortInformation(int port,
+int vtkIntersectionPolyDataFilter::FillInputPortInformation(int port,
                                                       vtkInformation *info)
 {
   if (!this->Superclass::FillInputPortInformation(port, info)) return 0;
