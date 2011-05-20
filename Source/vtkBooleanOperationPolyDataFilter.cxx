@@ -29,7 +29,7 @@
 #include "vtkObjectFactory.h"
 #include "vtkPointData.h"
 #include "vtkPolyData.h"
-#include "vtkPolyDataDistance.h"
+#include "vtkDistancePolyDataFilter.h"
 #include "vtkPolyDataIntersection.h"
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkSmartPointer.h"
@@ -48,7 +48,7 @@ vtkBooleanOperationPolyDataFilter::vtkBooleanOperationPolyDataFilter() :
   this->SetNumberOfOutputPorts(2);
 
   this->PolyDataIntersection = vtkPolyDataIntersection::New();
-  this->PolyDataDistance = vtkPolyDataDistance::New();
+  this->PolyDataDistance = vtkDistancePolyDataFilter::New();
 }
 
 //-----------------------------------------------------------------------------

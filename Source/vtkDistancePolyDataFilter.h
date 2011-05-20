@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataDistance.h
+  Module:    vtkDistancePolyDataFilter.h
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,7 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-// .NAME vtkPolyDataDistance
+// .NAME vtkDistancePolyDataFilter
 // .SECTION Description
 //
 // Computes the signed distance from one vtkPolyData to another. The
@@ -29,15 +29,15 @@
 // Written by Chris Weigle and Cory Quammen, The University of North
 // Carolina at Chapel Hill.
 
-#ifndef __vtkPolyDataDistance_h
-#define __vtkPolyDataDistance_h
+#ifndef __vtkDistancePolyDataFilter_h
+#define __vtkDistancePolyDataFilter_h
 
 #include "vtkPolyDataAlgorithm.h"
 
-class vtkPolyDataDistance : public vtkPolyDataAlgorithm {
+class vtkDistancePolyDataFilter : public vtkPolyDataAlgorithm {
 public:
-  static vtkPolyDataDistance *New();
-  vtkTypeMacro(vtkPolyDataDistance, vtkPolyDataAlgorithm);
+  static vtkDistancePolyDataFilter *New();
+  vtkTypeMacro(vtkDistancePolyDataFilter, vtkPolyDataAlgorithm);
   void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:
@@ -67,8 +67,8 @@ public:
   vtkPolyData* GetSecondDistanceOutput();
 
 protected:
-  vtkPolyDataDistance();
-  ~vtkPolyDataDistance();
+  vtkDistancePolyDataFilter();
+  ~vtkDistancePolyDataFilter();
 
   int RequestData(vtkInformation*, vtkInformationVector**, vtkInformationVector*);
   int FillInputPortInformation(int, vtkInformation*);
@@ -80,8 +80,8 @@ protected:
   int ComputeSecondDistance;
 
 private:
-  vtkPolyDataDistance(const vtkPolyDataDistance&); // no implementation
-  void operator=(const vtkPolyDataDistance&);      // no implementation
+  vtkDistancePolyDataFilter(const vtkDistancePolyDataFilter&); // no implementation
+  void operator=(const vtkDistancePolyDataFilter&);      // no implementation
 };
 
 #endif

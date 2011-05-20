@@ -34,7 +34,7 @@
 #include "vtkDataSetAttributes.h" // Needed for CopyCells() method
 
 class vtkIdList;
-class vtkPolyDataDistance;
+class vtkDistancePolyDataFilter;
 class vtkPolyDataIntersection;
 
 
@@ -122,7 +122,7 @@ private:
 
   vtkPolyDataIntersection *PolyDataIntersection;
 
-  vtkPolyDataDistance *PolyDataDistance;
+  vtkDistancePolyDataFilter *PolyDataDistance;
 
 };
 

@@ -47,7 +47,7 @@ SET(Libraries
 SET( ADDITIONAL_VTK_FILES
   vtkImplicitPolyData.cxx
   vtkPolyDataIntersection.cxx
-  vtkPolyDataDistance.cxx
+  vtkDistancePolyDataFilter.cxx
 )
 
 SET(CurrentExe "PolyDataBooleanOperationFilterExample")

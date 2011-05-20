@@ -1,7 +1,7 @@
 /*=========================================================================
 
   Program:   Visualization Toolkit
-  Module:    vtkPolyDataDistance.cxx
+  Module:    vtkDistancePolyDataFilter.cxx
 
   Copyright (c) Ken Martin, Will Schroeder, Bill Lorensen
   All rights reserved.
@@ -12,7 +12,7 @@
      PURPOSE.  See the above copyright notice for more information.
 
 =========================================================================*/
-#include "vtkPolyDataDistance.h"
+#include "vtkDistancePolyDataFilter.h"
 
 #include "vtkCellData.h"
 #include "vtkDoubleArray.h"
@@ -27,10 +27,10 @@
 #include "vtkStreamingDemandDrivenPipeline.h"
 #include "vtkTriangle.h"
 
-vtkStandardNewMacro(vtkPolyDataDistance);
+vtkStandardNewMacro(vtkDistancePolyDataFilter);
 
 //-----------------------------------------------------------------------------
-vtkPolyDataDistance::vtkPolyDataDistance() : vtkPolyDataAlgorithm()
+vtkDistancePolyDataFilter::vtkDistancePolyDataFilter() : vtkPolyDataAlgorithm()
 {
   this->SignedDistance = 1;
   this->NegateDistance = 0;
@@ -45,13 +45,13 @@ vtkPolyDataDistance::vtkPolyDataDistance() : vtkPolyDataAlgorithm()
 }
 
 //-----------------------------------------------------------------------------
-vtkPolyDataDistance::~vtkPolyDataDistance()
+vtkDistancePolyDataFilter::~vtkDistancePolyDataFilter()
 {
 }
 
 
 //-----------------------------------------------------------------------------
-int vtkPolyDataDistance::RequestData(vtkInformation*        vtkNotUsed(request),
+int vtkDistancePolyDataFilter::RequestData(vtkInformation*        vtkNotUsed(request),
                                      vtkInformationVector** inputVector,
                                      vtkInformationVector*  outputVector)
 {
@@ -87,9 +87,9 @@ int vtkPolyDataDistance::RequestData(vtkInformation*        vtkNotUsed(request),
 }
 
 //-----------------------------------------------------------------------------
-void vtkPolyDataDistance::GetPolyDataDistance(vtkPolyData* mesh, vtkPolyData* src)
+void vtkDistancePolyDataFilter::GetPolyDataDistance(vtkPolyData* mesh, vtkPolyData* src)
 {
-  vtkDebugMacro(<<"Start vtkPolyDataDistance::GetPolyDataDistance");
+  vtkDebugMacro(<<"Start vtkDistancePolyDataFilter::GetPolyDataDistance");
 
   if (mesh->GetNumberOfPolys() == 0 || mesh->GetNumberOfPoints() == 0)
     {
@@ -155,18 +155,18 @@ void vtkPolyDataDistance::GetPolyDataDistance(vtkPolyData* mesh, vtkPolyData* sr
 
   imp->Delete();
 
-  vtkDebugMacro(<<"End vtkPolyDataDistance::GetPolyDataDistance");
+  vtkDebugMacro(<<"End vtkDistancePolyDataFilter::GetPolyDataDistance");
 }
 
 //-----------------------------------------------------------------------------
-vtkPolyData* vtkPolyDataDistance::GetSecondDistanceOutput()
+vtkPolyData* vtkDistancePolyDataFilter::GetSecondDistanceOutput()
 {
   if (!this->ComputeSecondDistance) return 0;
   return vtkPolyData::SafeDownCast(this->GetExecutive()->GetOutputData(1));
 }
 
 //-----------------------------------------------------------------------------
-int vtkPolyDataDistance::FillInputPortInformation(int port, vtkInformation *info)
+int vtkDistancePolyDataFilter::FillInputPortInformation(int port, vtkInformation *info)
 {
   if (!this->Superclass::FillInputPortInformation(port, info)) return 0;
   if (port == 0)
@@ -182,7 +182,7 @@ int vtkPolyDataDistance::FillInputPortInformation(int port, vtkInformation *info
 }
 
 //-----------------------------------------------------------------------------
-void vtkPolyDataDistance::PrintSelf(ostream& os, vtkIndent indent)
+void vtkDistancePolyDataFilter::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
   os << indent << "SignedDistance: " << this->SignedDistance << "\n";

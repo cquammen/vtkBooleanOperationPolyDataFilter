@@ -2,7 +2,7 @@
 #include <vtkAppendPolyData.h>
 #include <vtkDataSetSurfaceFilter.h>
 #include <vtkBooleanOperationPolyDataFilter.h>
-#include <vtkPolyDataDistance.h>
+#include <vtkDistancePolyDataFilter.h>
 #include <vtkPolyDataIntersection.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkRenderer.h>
@@ -30,8 +30,8 @@ vtkActor* GetBooleanOperationActor( double x, int operation )
   intersection->SetInputConnection( 0, sphere1->GetOutputPort() );
   intersection->SetInputConnection( 1, sphere2->GetOutputPort() );
 
-  vtkSmartPointer<vtkPolyDataDistance> distance =
-    vtkSmartPointer<vtkPolyDataDistance>::New();
+  vtkSmartPointer<vtkDistancePolyDataFilter> distance =
+    vtkSmartPointer<vtkDistancePolyDataFilter>::New();
   distance->SetInputConnection( 0, intersection->GetOutputPort( 1 ) );
   distance->SetInputConnection( 1, intersection->GetOutputPort( 2 ) );
 
