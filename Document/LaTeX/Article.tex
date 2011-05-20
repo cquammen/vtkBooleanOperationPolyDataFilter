@@ -158,11 +158,11 @@ void SetTolerance(double tolerance);
 \end{verbatim}
 use to determine when the absolute value of the signed distance is close enough to zero to be considered zero.
 
-\subsection{vtkPolyDataDistance}
+\subsection{vtkDistancePolyDataFilter}
 
-To support distance-based boolean operations, we introduce another class, \code{vtkPolyDataDistance}, that computes the distance from points in the first input \code{vtkPolyData} to a second by evaluating the signed distance field from the second input using the \code{vtkImplicitPolyData} class. Optionally, the distance from points in the second input \code{vtkPolyData} to the first can also be computed. These distances are stored as a point data field named ``Distance''. In addition, the filter computes a cell data field named ``Distance'' that contains the distance from the center of each cell to the nearest point on the second input
+To support distance-based boolean operations, we introduce another class, \code{vtkDistancePolyDataFilter}, that computes the distance from points in the first input \code{vtkPolyData} to a second by evaluating the signed distance field from the second input using the \code{vtkImplicitPolyData} class. Optionally, the distance from points in the second input \code{vtkPolyData} to the first can also be computed. These distances are stored as a point data field named ``Distance''. In addition, the filter computes a cell data field named ``Distance'' that contains the distance from the center of each cell to the nearest point on the second input
 
-\code{vtkPolyDataDistance} has some options. Use the methods
+\code{vtkDistancePolyDataFilter} has some options. Use the methods
 \begin{verbatim}
 void SetSignedDistance(int value);
 void SignedDistanceOn();
@@ -280,9 +280,9 @@ The lines collected above are used to constrain a new triangulation of the point
 
 The \code{vtkDelaunay2D} class can be used to determine a triangulation from the cell, surface intersection lines, and boundary points and lines. A transformation of the points collected above that rotates them to the XY-plane is computed and set as the transform for the \code{vtkDelaunay2D} object. A new \code{vtkPolyData} object that contains the collected points and lines is defined and passed as both the input and constraint source to a \code{vtkDelaunay2D} object. The line point indices are renumbered to point to their locations in the new \code{vtkPolyData} object, and a map from the original indices is created to remap the output cell indices from the triangulation to the point indices in the output mesh. If a point in the surface intersection is within some small tolerance distance from a point in the surface mesh, the point in the surface mesh is used instead. This prevents unintentional splitting of the surface mesh.
 
-\subsection{vtkPolyDataIntersection}
+\subsection{vtkIntersectionPolyDataFilter}
 
-We have defined a new class \code{vtkPolyDataIntersection} that encapsulates the algorithm described above to compute the surface intersection between two surface meshes and optionally split the input meshes by the surface intersection. The surface meshes must consist of triangles. Two options are available for this filter:
+We have defined a new class \code{vtkIntersectionPolyDataFilter} that encapsulates the algorithm described above to compute the surface intersection between two surface meshes and optionally split the input meshes by the surface intersection. The surface meshes must consist of triangles. Two options are available for this filter:
 \begin{verbatim}
 void SetSplitFirstOutput(int value);
 void SplitFirstOutputOn();
@@ -300,7 +300,7 @@ There are two ways to use the classes we have developed to compute the surface m
 
 \subsection{Setting up a VTK Pipeline for Boolean Operations on Surfaces}
 
-To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two arrows between \code{vtkPolyDataIntersection} and \code{vtkPolyDataDistance} indicate that the two output surfaces from \code{vtkPolyDataIntersection} are set as the input to \code{vtkPolyDataDistance}. The two instances of \code{vtkThreshold} operate on the two outputs of \code{vtkPolyDataDistance}. The example \verb+PipelineExample.cxx+ included with the source code in this article shows how to set up a pipeline to compute boolean operations.
+To compute a surface resulting from a boolean operation on surface meshes, the pipeline of classes shown in Figure \ref{fig:Pipeline} can be used to compute the desired surface. The two arrows between \code{vtkIntersectionPolyDataFilter} and \code{vtkDistancePolyDataFilter} indicate that the two output surfaces from \code{vtkIntersectionPolyDataFilter} are set as the input to \code{vtkDistancePolyDataFilter}. The two instances of \code{vtkThreshold} operate on the two outputs of \code{vtkDistancePolyDataFilter}. The example \verb+PipelineExample.cxx+ included with the source code in this article shows how to set up a pipeline to compute boolean operations.
 
 \begin{figure}[t]
 \begin{center}
@@ -309,11 +309,11 @@ To compute a surface resulting from a boolean operation on surface meshes, the p
 
 $\downarrow$ \hspace{3.2em} $\downarrow$
 
-\code{vtkPolyDataIntersection}
+\code{vtkIntersectionPolyDataFilter}
 
 $\downarrow$ \hspace{3.2em} $\downarrow$
 
-\code{vtkPolyDataDistance}
+\code{vtkDistancePolyDataFilter}
 
 $\swarrow$ \hspace{3em} $\searrow$
 
@@ -369,7 +369,7 @@ Results from boolean operations on various pairs of geometric objects are shown 
 
 \section{Limitations}
 
-The \code{vtkPolyDataIntersection} class operates only on triangulated surface meshes, and it does not properly handle intersections between coplanar triangles. When two triangles are determined to be coplanar, the intersection information is discarded. If this occurs, then the output of a boolean operation may not be exactly correct at the location of the coplanar triangles.
+The \code{vtkIntersectionPolyDataFilter} class operates only on triangulated surface meshes, and it does not properly handle intersections between coplanar triangles. When two triangles are determined to be coplanar, the intersection information is discarded. If this occurs, then the output of a boolean operation may not be exactly correct at the location of the coplanar triangles.
 
 \section{Software Requirements}
 
